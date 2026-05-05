@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriLog — Дневник питания</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>NutriLog</h1>
+        <p>Персональный дневник питания с анализом КБЖУ</p>
+
+        <form id="entry-form">
+            <input type="text" id="name" placeholder="Название продукта" required>
+
+            <input type="number" id="proteins" placeholder="Белки" step="0.1" required>
+            <input type="number" id="fats" placeholder="Жиры" step="0.1" required>
+            <input type="number" id="carbs" placeholder="Углеводы" step="0.1" required>
+            <input type="number" id="calories" placeholder="Калории" step="0.1" required>
+
+            <button type="submit">Добавить запись</button>
+        </form>
+
+        <h2>Записи дневника</h2>
+        <div id="entries-list"></div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
