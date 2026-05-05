@@ -2,27 +2,99 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NutriLog — Дневник питания</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <h1>NutriLog</h1>
-        <p>Персональный дневник питания с анализом КБЖУ</p>
+    <div class="app">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-leaf"></i>
+                    <span>NutriLog</span>
+                </div>
+                <nav>
+                    <a href="#" class="nav-link active">Дневник</a>
+                    <a href="#" class="nav-link">Продукты</a>
+                    <a href="#" class="nav-link">Статистика</a>
+                </nav>
+            </div>
+        </header>
 
-        <form id="entry-form">
-            <input type="text" id="name" placeholder="Название продукта" required>
+        <section class="hero">
+            <img src="/static/images/hero.png" alt="Здоровое питание" class="hero-image">
+            <div class="hero-overlay">
+                <h1>Следи за питанием легко и красиво</h1>
+                <p>NutriLog помогает вести дневник с удовольствием</p>
+            </div>
+        </section>
 
-            <input type="number" id="proteins" placeholder="Белки" step="0.1" required>
-            <input type="number" id="fats" placeholder="Жиры" step="0.1" required>
-            <input type="number" id="carbs" placeholder="Углеводы" step="0.1" required>
-            <input type="number" id="calories" placeholder="Калории" step="0.1" required>
+        <main class="main-content">
+            <div class="container">
+                <div class="card form-card">
+                    <h2><i class="fas fa-plus-circle"></i> Добавить запись</h2>
 
-            <button type="submit">Добавить запись</button>
-        </form>
+                    <form id="entry-form" class="form">
+                        <div class="form-row">
+                            <div class="input-group full">
+                                <label for="name">Название продукта или блюда</label>
+                                <input type="text" id="name" placeholder="Например: Гречка с курицей и овощами" required>
+                            </div>
+                        </div>
 
-        <h2>Записи дневника</h2>
-        <div id="entries-list"></div>
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label for="proteins">Белки (г)</label>
+                                <input type="number" id="proteins" step="0.1" placeholder="0.0" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="fats">Жиры (г)</label>
+                                <input type="number" id="fats" step="0.1" placeholder="0.0" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="carbs">Углеводы (г)</label>
+                                <input type="number" id="carbs" step="0.1" placeholder="0.0" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="calories">Калории (ккал)</label>
+                                <input type="number" id="calories" step="0.1" placeholder="0.0" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Добавить в дневник
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="list-header">
+                        <h2><i class="fas fa-list-ul"></i> Записи за сегодня</h2>
+                        <button id="refresh-btn" class="btn-icon" title="Обновить">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div id="entries-list" class="entries-list"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-left">
+                        © 2026 NutriLog — Персональный дневник питания
+                    </div>
+                    <div class="footer-right">
+                        <a href="#">Помощь</a>
+                        <a href="#">Обратная связь</a>
+                        <a href="#">О проекте</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <script src="/static/script.js"></script>

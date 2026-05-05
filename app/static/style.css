@@ -1,65 +1,323 @@
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f8;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #f8f9fb;
     color: #222;
+    line-height: 1.5;
+}
+
+.app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.header {
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e40af;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo i {
+    color: #22c55e;
+}
+
+.nav-link {
+    margin-left: 34px;
+    text-decoration: none;
+    color: #374151;
+    font-weight: 500;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: #1e40af;
+}
+
+.hero {
+    position: relative;
+    height: 340px;
+    overflow: hidden;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.72) contrast(1.08);
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    z-index: 2;
+    width: 90%;
+    max-width: 720px;
+}
+
+.hero-overlay h1 {
+    font-size: 2.35rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.55);
+}
+
+.hero-overlay p {
+    font-size: 1.25rem;
+    opacity: 0.95;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.main-content {
+    flex: 1;
+    padding: 10px 0 40px;
 }
 
 .container {
-    max-width: 800px;
-    margin: 40px auto;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.card {
     background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
     padding: 30px;
-    border-radius: 14px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    margin-bottom: 28px;
 }
 
-h1 {
-    text-align: center;
-    color: #2563eb;
+h2 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #1e2937;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-p {
-    text-align: center;
-}
-
-form {
+.form-grid {
     display: grid;
-    gap: 12px;
-    margin: 25px 0;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 18px;
+    margin-bottom: 26px;
 }
 
-input {
-    padding: 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 16px;
+.input-group {
+    display: flex;
+    flex-direction: column;
 }
 
-button {
-    padding: 12px;
-    background: #2563eb;
-    color: white;
+.input-group.full {
+    grid-column: 1 / -1;
+    margin-bottom: 18px;
+}
+
+.input-group label {
+    font-size: 0.93rem;
+    color: #64748b;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.input-group input {
+    padding: 14px 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    transition: all 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    outline: none;
+}
+
+.btn {
+    padding: 15px 32px;
     border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(37, 99, 235, 0.4);
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 1.45rem;
+    color: #64748b;
+    padding: 8px;
     border-radius: 8px;
-    font-size: 16px;
     cursor: pointer;
 }
 
-button:hover {
-    background: #1d4ed8;
+.btn-icon:hover {
+    background: #f1f5f9;
+    color: #2563eb;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.entries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .entry-card {
-    background: #f8fafc;
+    background: #fafcff;
     border: 1px solid #e2e8f0;
-    padding: 16px;
-    border-radius: 10px;
-    margin-bottom: 12px;
+    border-radius: 14px;
+    padding: 22px 26px;
+    transition: all 0.3s ease;
 }
 
-.entry-card h3 {
-    margin-top: 0;
+.entry-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    border-color: #bfdbfe;
+}
+
+.entry-card strong {
+    font-size: 1.25rem;
     color: #1e40af;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.nutrients {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+    gap: 14px;
+}
+
+.nutrient {
+    background: white;
+    padding: 12px 14px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #f1f5f9;
+}
+
+.nutrient small {
+    font-size: 0.85rem;
+    color: #64748b;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.nutrient span {
+    font-weight: 600;
+    color: #334155;
+}
+
+.footer {
+    background: #f1f5f9;
+    border-top: 1px solid #e5e7eb;
+    padding: 26px 0;
+    margin-top: auto;
+    font-size: 0.97rem;
+    color: #64748b;
+}
+
+.footer-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.footer-right a {
+    color: #64748b;
+    text-decoration: none;
+    margin-left: 30px;
+    transition: color 0.2s;
+}
+
+.footer-right a:hover {
+    color: #2563eb;
+}
+
+@media (max-width: 768px) {
+    .hero {
+        height: 260px;
+    }
+
+    .hero-overlay h1 {
+        font-size: 1.85rem;
+    }
+
+    .header-content {
+        height: auto;
+        padding: 16px 24px;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .nav-link {
+        margin: 0 12px;
+    }
 }
