@@ -11,13 +11,21 @@ services:
       PORT: 8000
       DEBUG: "true"
       SECRET_KEY: docker-secret-key
+
       DB_HOST: db
       DB_PORT: 5432
       DB_NAME: nutrition
       DB_USER: postgres
       DB_PASSWORD: postgres
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      RELEASE_VERSION: local
+      ENVIRONMENT: dev
     depends_on:
       - db
+      - redis
 
   db:
     image: postgres:15
@@ -30,6 +38,11 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
 
 volumes:
   postgres_data:

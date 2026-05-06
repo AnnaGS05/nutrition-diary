@@ -1,4 +1,6 @@
 from app.database import get_connection
+from app.logger import logger
+
 
 def get_entries():
     conn = get_connection()
@@ -14,6 +16,14 @@ def get_entries():
 
     cursor.close()
     conn.close()
+
+    logger.info(
+        "entries_loaded",
+        extra={
+            "path": "/api/entries",
+            "status_code": 200
+        }
+    )
 
     return [
         {
@@ -49,6 +59,14 @@ def add_entry(entry):
     conn.commit()
     cursor.close()
     conn.close()
+
+    logger.info(
+        "entry_created",
+        extra={
+            "path": "/api/entries",
+            "status_code": 201
+        }
+    )
 
     return {
         "id": new_entry[0],

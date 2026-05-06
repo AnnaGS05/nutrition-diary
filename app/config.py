@@ -13,6 +13,9 @@ class Settings:
     DB_USER = os.getenv("DB_USER", "postgres")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
 
+    REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+
     RELEASE_VERSION = os.getenv("RELEASE_VERSION", "local")
     ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")
 
