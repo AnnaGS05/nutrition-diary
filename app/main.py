@@ -3,9 +3,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from app.config import settings
 from app.routes.entries import router as entries_router
 
-app = FastAPI(title="NutriLog")
+app = FastAPI(title=settings.APP_NAME)
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
@@ -19,3 +20,11 @@ def home(request: Request):
         request=request,
         name="index.html"
     )
+
+@app.get("/health")
+def health():
+    return {
+        "status": "ok",
+        "environment": settings.ENVIRONMENT,
+        "release_version": settings.RELEASE_VERSION
+    }
