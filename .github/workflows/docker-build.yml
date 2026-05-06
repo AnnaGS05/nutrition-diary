@@ -7,6 +7,8 @@ on:
 
 env:
   IMAGE_NAME: nutrition-diary
+  REGISTRY: ghcr.io
+  IMAGE_OWNER: annags05
 
 jobs:
   build:
@@ -23,7 +25,7 @@ jobs:
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -31,14 +33,14 @@ jobs:
         id: vars
         run: echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
-            - name: Build Docker image
+      - name: Build Docker image
         run: |
           docker build \
-            -t ghcr.io/annags05/nutrition-diary:${{ steps.vars.outputs.sha_short }} \
-            -t ghcr.io/annags05/nutrition-diary:latest \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.IMAGE_NAME }}:latest \
             .
 
       - name: Push Docker image
         run: |
-          docker push ghcr.io/annags05/nutrition-diary:${{ steps.vars.outputs.sha_short }}
-          docker push ghcr.io/annags05/nutrition-diary:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.IMAGE_NAME }}:latest
