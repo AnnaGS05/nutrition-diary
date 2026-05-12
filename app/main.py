@@ -7,11 +7,10 @@ from fastapi.templating import Jinja2Templates
 
 from app.config import settings
 from app.middleware import RequestLoggingMiddleware
-
 from app.routes.auth import router as auth_router
 from app.routes.entries import router as entries_router
 from app.routes.profile import router as profile_router
-
+from app.routes.stats import router as stats_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -20,17 +19,14 @@ app = FastAPI(
 
 app.add_middleware(RequestLoggingMiddleware)
 
-app.mount(
-    "/static",
-    StaticFiles(directory="app/static"),
-    name="static"
-)
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 templates = Jinja2Templates(directory="app/templates")
 
-app.include_router(auth_router)
 app.include_router(entries_router)
+app.include_router(auth_router)
 app.include_router(profile_router)
+app.include_router(stats_router)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -62,6 +58,14 @@ def profile_page(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="profile.html"
+    )
+
+
+@app.get("/stats", response_class=HTMLResponse)
+def stats_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="stats.html"
     )
 
 

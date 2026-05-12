@@ -7,37 +7,25 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-
 <div class="page">
-
     <section class="card auth-page">
+        <h1>NutriLog</h1>
+        <h2>Вход в аккаунт</h2>
 
-        <h2>Вход</h2>
-
-        <input id="loginUsername" placeholder="Логин">
-
+        <input id="loginUsername" type="text" placeholder="Логин">
         <input id="loginPassword" type="password" placeholder="Пароль">
 
-        <button onclick="loginUser()">
-            Войти
-        </button>
+        <button onclick="loginUser()">Войти</button>
 
         <p id="authMessage" class="message"></p>
 
-        <p>
-            Нет аккаунта?
-            <a href="/register">Зарегистрироваться</a>
-        </p>
-
-        <p>
-            <a href="/">На главную</a>
-        </p>
-
+        <div class="auth-links">
+            <p>Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+            <p><a href="/">На главную</a></p>
+        </div>
     </section>
-
 </div>
 
 <script src="/static/script.js"></script>
-
 </body>
 </html>

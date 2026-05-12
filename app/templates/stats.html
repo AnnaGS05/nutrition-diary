@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статистика — NutriLog</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="page">
+    <nav class="navbar">
+        <a href="/" class="logo-text">NutriLog</a>
+
+        <div class="nav-actions">
+            <a href="/">Дневник</a>
+            <a href="/profile">Профиль</a>
+            <button onclick="logoutUser()">Выйти</button>
+        </div>
+    </nav>
+
+    <section class="card">
+        <h2>Статистика питания</h2>
+        <p class="message">
+            Анализ потребления КБЖУ за последние 7 дней.
+        </p>
+    </section>
+
+    <section class="stats">
+        <div class="stat-card">
+            <span>Средние калории</span>
+            <strong id="avgCalories">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Средние белки</span>
+            <strong id="avgProteins">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Средние жиры</span>
+            <strong id="avgFats">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Средние углеводы</span>
+            <strong id="avgCarbs">0</strong>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Калории за последние 7 дней</h2>
+        <canvas id="caloriesChart"></canvas>
+    </section>
+
+    <section class="card">
+        <h2>Сравнение со средней нормой</h2>
+
+        <div class="stats">
+            <div class="stat-card">
+                <span>Калории</span>
+                <strong id="caloriesPercent">0%</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Белки</span>
+                <strong id="proteinsPercent">0%</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Жиры</span>
+                <strong id="fatsPercent">0%</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Углеводы</span>
+                <strong id="carbsPercent">0%</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Лучший день по калориям</h2>
+        <p id="bestDayText" class="message">Данные пока не загружены</p>
+    </section>
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>

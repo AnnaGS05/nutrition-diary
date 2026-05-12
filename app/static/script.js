@@ -16,16 +16,18 @@ async function request(url, options = {}) {
 }
 
 async function isAuthenticated() {
-    const response = await fetch("/auth/me", {
-        credentials: "include"
-    });
+    try {
+        const response = await fetch("/auth/me", {
+            credentials: "include"
+        });
 
-    if (!response.ok) {
+        if (!response.ok) return false;
+
+        const data = await response.json();
+        return Boolean(data.authenticated);
+    } catch {
         return false;
     }
-
-    const data = await response.json();
-    return Boolean(data.authenticated);
 }
 
 function getSelectedDate() {
@@ -47,10 +49,6 @@ window.loginUser = async function () {
     const passwordInput = document.getElementById("loginPassword");
     const message = document.getElementById("authMessage");
 
-    if (!usernameInput || !passwordInput) {
-        return;
-    }
-
     const body = new URLSearchParams();
     body.append("username", usernameInput.value);
     body.append("password", passwordInput.value);
@@ -63,18 +61,14 @@ window.loginUser = async function () {
 
     const data = await response.json();
 
-    if (response.ok && data.message) {
-        if (message) {
-            message.textContent = "Вход выполнен";
-        }
+    if (message) {
+        message.textContent = data.message || data.error || "Ошибка входа";
+    }
 
+    if (response.ok) {
         setTimeout(() => {
             window.location.href = "/";
-        }, 500);
-    } else {
-        if (message) {
-            message.textContent = data.error || "Ошибка входа";
-        }
+        }, 600);
     }
 };
 
@@ -82,10 +76,6 @@ window.registerUser = async function () {
     const usernameInput = document.getElementById("registerUsername");
     const passwordInput = document.getElementById("registerPassword");
     const message = document.getElementById("authMessage");
-
-    if (!usernameInput || !passwordInput) {
-        return;
-    }
 
     const body = new URLSearchParams();
     body.append("username", usernameInput.value);
@@ -100,15 +90,23 @@ window.registerUser = async function () {
     const data = await response.json();
 
     if (message) {
-        message.textContent =
-            data.message || data.error || "Регистрация выполнена";
+        message.textContent = data.message || data.error || "Регистрация выполнена";
     }
 
-    if (response.ok && data.message) {
+    if (response.ok) {
         setTimeout(() => {
             window.location.href = "/login";
         }, 700);
     }
+};
+
+window.logoutUser = async function () {
+    await fetch("/auth/logout", {
+        method: "POST",
+        credentials: "include"
+    });
+
+    window.location.href = "/";
 };
 
 window.addEntry = async function () {
@@ -117,8 +115,7 @@ window.addEntry = async function () {
 
     if (!authenticated) {
         if (entryMessage) {
-            entryMessage.textContent =
-                "Для добавления записи необходимо войти";
+            entryMessage.textContent = "Для добавления записи необходимо войти";
         }
 
         setTimeout(() => {
@@ -143,7 +140,7 @@ window.addEntry = async function () {
     });
 
     if (entryMessage) {
-        entryMessage.textContent = "Запись добавлена";
+        entryMessage.textContent = "Запись добавлена ✓";
     }
 
     document.getElementById("entryName").value = "";
@@ -163,16 +160,12 @@ async function loadEntries() {
         credentials: "include"
     });
 
-    if (!response.ok) {
-        return;
-    }
+    if (!response.ok) return;
 
     const entries = await response.json();
     const list = document.getElementById("entriesList");
 
-    if (!list) {
-        return;
-    }
+    if (!list) return;
 
     list.innerHTML = "";
 
@@ -184,21 +177,14 @@ async function loadEntries() {
     entries.forEach(entry => {
         const item = document.createElement("div");
         item.className = "entry";
-
         item.innerHTML = `
-            <div>
-                <div class="entry-title">${entry.name}</div>
-                <small>${entry.entry_date}</small>
-            </div>
+            <div><strong class="entry-title">${entry.name}</strong></div>
             <div>Б: ${entry.proteins}</div>
             <div>Ж: ${entry.fats}</div>
             <div>У: ${entry.carbs}</div>
             <div>${entry.calories} ккал</div>
-            <button class="danger" onclick="deleteEntry(${entry.id})">
-                Удалить
-            </button>
+            <button class="danger" onclick="deleteEntry(${entry.id})">Удалить</button>
         `;
-
         list.appendChild(item);
     });
 }
@@ -219,123 +205,31 @@ async function loadStats() {
         credentials: "include"
     });
 
-    if (!response.ok) {
-        setStatsToZero();
-        return;
-    }
+    if (!response.ok) return;
 
     const stats = await response.json();
 
-    setStat(
-        "totalProteins",
-        stats.proteins,
-        stats.proteins_norm,
-        stats.proteins_percent
-    );
-
-    setStat(
-        "totalFats",
-        stats.fats,
-        stats.fats_norm,
-        stats.fats_percent
-    );
-
-    setStat(
-        "totalCarbs",
-        stats.carbs,
-        stats.carbs_norm,
-        stats.carbs_percent
-    );
-
-    setStat(
-        "totalCalories",
-        stats.calories,
-        stats.calories_norm,
-        stats.calories_percent
-    );
+    setStat("totalProteins", stats.proteins, stats.proteins_norm);
+    setStat("totalFats", stats.fats, stats.fats_norm);
+    setStat("totalCarbs", stats.carbs, stats.carbs_norm);
+    setStat("totalCalories", stats.calories, stats.calories_norm);
 }
 
-function setStat(elementId, value, norm, percent) {
-    const element = document.getElementById(elementId);
+function setStat(elementId, value, norm) {
+    const el = document.getElementById(elementId);
 
-    if (!element) {
-        return;
-    }
-
-    element.innerHTML = `
-        ${value} / ${norm}
-        <small>${percent}% нормы</small>
-    `;
-}
-
-function setStatsToZero() {
-    setStat("totalProteins", 0, 0, 0);
-    setStat("totalFats", 0, 0, 0);
-    setStat("totalCarbs", 0, 0, 0);
-    setStat("totalCalories", 0, 0, 0);
-}
-
-async function logoutUser() {
-    await fetch("/auth/logout", {
-        method: "POST",
-        credentials: "include"
-    });
-
-    window.location.href = "/";
-}
-
-async function checkAuth() {
-    const authenticated = await isAuthenticated();
-
-    const authToggleBtn = document.getElementById("authToggleBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const profileBtn = document.getElementById("profileBtn");
-    const entriesList = document.getElementById("entriesList");
-
-    if (authenticated) {
-        if (authToggleBtn) {
-            authToggleBtn.classList.add("hidden");
-        }
-
-        if (logoutBtn) {
-            logoutBtn.classList.remove("hidden");
-        }
-
-        if (profileBtn) {
-            profileBtn.classList.remove("hidden");
-        }
-
-        await loadEntries();
-        await loadStats();
-    } else {
-        if (authToggleBtn) {
-            authToggleBtn.classList.remove("hidden");
-        }
-
-        if (logoutBtn) {
-            logoutBtn.classList.add("hidden");
-        }
-
-        if (profileBtn) {
-            profileBtn.classList.add("hidden");
-        }
-
-        setStatsToZero();
-
-        if (entriesList) {
-            entriesList.innerHTML =
-                "<p>Для просмотра записей необходимо войти в систему</p>";
-        }
+    if (el) {
+        el.textContent = `${value} / ${norm}`;
     }
 }
 
 window.saveProfile = async function () {
     const profile = {
-        age: document.getElementById("profileAge").value,
-        height: document.getElementById("profileHeight").value,
-        weight: document.getElementById("profileWeight").value,
+        age: Number(document.getElementById("profileAge").value),
+        height: Number(document.getElementById("profileHeight").value),
+        weight: Number(document.getElementById("profileWeight").value),
         gender: document.getElementById("profileGender").value,
-        activity: document.getElementById("profileActivity").value,
+        activity: parseFloat(document.getElementById("profileActivity").value),
         goal: document.getElementById("profileGoal").value
     };
 
@@ -349,86 +243,174 @@ window.saveProfile = async function () {
     });
 
     const data = await response.json();
+    const message = document.getElementById("profileMessage");
 
-    if (!response.ok) {
-        document.getElementById("profileMessage").textContent =
-            "Необходимо войти в систему";
-        return;
+    if (message) {
+        message.textContent = response.ok ? "Профиль сохранён ✓" : "Ошибка сохранения";
     }
 
-    document.getElementById("profileMessage").textContent =
-        "Профиль сохранён";
-
-    document.getElementById("normProteins").textContent =
-        data.proteins_norm;
-
-    document.getElementById("normFats").textContent =
-        data.fats_norm;
-
-    document.getElementById("normCarbs").textContent =
-        data.carbs_norm;
-
-    document.getElementById("normCalories").textContent =
-        data.calories_norm;
+    if (response.ok) {
+        setProfileNorms(data);
+        await loadProfile();
+    }
 };
 
 async function loadProfile() {
     const profileAge = document.getElementById("profileAge");
 
-    if (!profileAge) {
-        return;
-    }
+    if (!profileAge) return;
 
     const response = await fetch("/api/profile/", {
         credentials: "include"
     });
 
-    if (!response.ok) {
-        return;
-    }
+    if (!response.ok) return;
 
     const data = await response.json();
 
-    if (!data.exists) {
-        return;
-    }
+    if (!data.exists) return;
 
-    document.getElementById("profileAge").value = data.age;
-    document.getElementById("profileHeight").value = data.height;
-    document.getElementById("profileWeight").value = data.weight;
-    document.getElementById("profileGender").value = data.gender;
-    document.getElementById("profileActivity").value = data.activity;
-    document.getElementById("profileGoal").value = data.goal;
+    document.getElementById("profileAge").value = data.age || "";
+    document.getElementById("profileHeight").value = data.height || "";
+    document.getElementById("profileWeight").value = data.weight || "";
+    document.getElementById("profileGender").value = data.gender || "male";
+    document.getElementById("profileActivity").value = data.activity || "1.55";
+    document.getElementById("profileGoal").value = data.goal || "maintain";
 
-    document.getElementById("normProteins").textContent =
-        data.proteins_norm;
-
-    document.getElementById("normFats").textContent =
-        data.fats_norm;
-
-    document.getElementById("normCarbs").textContent =
-        data.carbs_norm;
-
-    document.getElementById("normCalories").textContent =
-        data.calories_norm;
+    setProfileNorms(data);
 }
 
-const logoutButton = document.getElementById("logoutBtn");
+function setProfileNorms(data) {
+    const proteins = document.getElementById("normProteins");
+    const fats = document.getElementById("normFats");
+    const carbs = document.getElementById("normCarbs");
+    const calories = document.getElementById("normCalories");
 
-if (logoutButton) {
-    logoutButton.addEventListener("click", logoutUser);
+    if (proteins) proteins.textContent = data.proteins_norm || 0;
+    if (fats) fats.textContent = data.fats_norm || 0;
+    if (carbs) carbs.textContent = data.carbs_norm || 0;
+    if (calories) calories.textContent = data.calories_norm || 0;
 }
 
-const dateInput = document.getElementById("entryDate");
+async function checkAuth() {
+    const authenticated = await isAuthenticated();
 
-if (dateInput) {
-    dateInput.value = new Date().toISOString().slice(0, 10);
+    const authToggleBtn = document.getElementById("authToggleBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const profileBtn = document.getElementById("profileBtn");
+    const statsBtn = document.getElementById("statsBtn");
 
-    dateInput.addEventListener("change", async () => {
+    if (authenticated) {
+        if (authToggleBtn) authToggleBtn.classList.add("hidden");
+        if (logoutBtn) logoutBtn.classList.remove("hidden");
+        if (profileBtn) profileBtn.classList.remove("hidden");
+        if (statsBtn) statsBtn.classList.remove("hidden");
+
         await loadEntries();
         await loadStats();
+    } else {
+        if (authToggleBtn) authToggleBtn.classList.remove("hidden");
+        if (logoutBtn) logoutBtn.classList.add("hidden");
+        if (profileBtn) profileBtn.classList.add("hidden");
+        if (statsBtn) statsBtn.classList.add("hidden");
+    }
+}
+
+async function loadWeeklyStats() {
+    const response = await fetch("/api/stats/weekly", {
+        credentials: "include"
+    });
+
+    if (!response.ok) return;
+
+    const data = await response.json();
+
+    const avgCalories = document.getElementById("avgCalories");
+    const avgProteins = document.getElementById("avgProteins");
+    const avgFats = document.getElementById("avgFats");
+    const avgCarbs = document.getElementById("avgCarbs");
+
+    if (avgCalories) avgCalories.textContent = data.average.calories;
+    if (avgProteins) avgProteins.textContent = data.average.proteins;
+    if (avgFats) avgFats.textContent = data.average.fats;
+    if (avgCarbs) avgCarbs.textContent = data.average.carbs;
+
+    setPercent("caloriesPercent", data.average.calories, data.norm.calories);
+    setPercent("proteinsPercent", data.average.proteins, data.norm.proteins);
+    setPercent("fatsPercent", data.average.fats, data.norm.fats);
+    setPercent("carbsPercent", data.average.carbs, data.norm.carbs);
+
+    const bestDayText = document.getElementById("bestDayText");
+
+    if (bestDayText) {
+        bestDayText.textContent =
+            `${data.best_day.date}: ${data.best_day.calories} ккал`;
+    }
+
+    const chart = document.getElementById("caloriesChart");
+
+    if (!chart || typeof Chart === "undefined") return;
+
+    new Chart(chart, {
+        type: "line",
+        data: {
+            labels: data.days.map(day => day.label),
+            datasets: [
+                {
+                    label: "Калории",
+                    data: data.days.map(day => day.calories),
+                    borderColor: "#4a9c5e",
+                    backgroundColor: "rgba(74,156,94,0.18)",
+                    fill: true,
+                    tension: 0.35
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
     });
 }
 
-checkAuth();
-loadProfile();
+function setPercent(elementId, value, norm) {
+    const element = document.getElementById(elementId);
+
+    if (!element) return;
+
+    if (!norm) {
+        element.textContent = "0%";
+        return;
+    }
+
+    element.textContent = `${Math.round(value / norm * 100)}%`;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const dateInput = document.getElementById("entryDate");
+
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().slice(0, 10);
+
+        dateInput.addEventListener("change", () => {
+            loadEntries();
+            loadStats();
+        });
+    }
+
+    checkAuth();
+    loadProfile();
+
+    if (location.pathname === "/stats") {
+        loadWeeklyStats();
+    }
+});
