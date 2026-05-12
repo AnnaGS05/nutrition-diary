@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация — NutriLog</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page">
+
+    <section class="card auth-page">
+
+        <h2>Регистрация</h2>
+
+        <input id="registerUsername" placeholder="Логин">
+
+        <input id="registerPassword" type="password" placeholder="Пароль">
+
+        <button onclick="registerUser()">
+            Зарегистрироваться
+        </button>
+
+        <p id="authMessage" class="message"></p>
+
+        <p>
+            Уже есть аккаунт?
+            <a href="/login">Войти</a>
+        </p>
+
+        <p>
+            <a href="/">На главную</a>
+        </p>
+
+    </section>
+
+</div>
+
+<script src="/static/script.js"></script>
+
+</body>
+</html>
