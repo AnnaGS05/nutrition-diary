@@ -1,5 +1,6 @@
 import os
 
+
 class Settings:
     APP_NAME = os.getenv("APP_NAME", "NutriLog")
     HOST = os.getenv("HOST", "0.0.0.0")
@@ -18,5 +19,11 @@ class Settings:
 
     RELEASE_VERSION = os.getenv("RELEASE_VERSION", "local")
     ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")
+
+    CORS_ORIGINS = os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:5173,http://localhost:3000"
+    ).split(",")
+
 
 settings = Settings()
