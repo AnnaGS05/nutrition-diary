@@ -6,7 +6,8 @@ on:
       - main
 
 env:
-  IMAGE_NAME: nutrition-diary
+  BACKEND_IMAGE_NAME: nutrition-diary-backend
+  FRONTEND_IMAGE_NAME: nutrition-diary-frontend
   REGISTRY: ghcr.io
   IMAGE_OWNER: annags05
 
@@ -33,14 +34,26 @@ jobs:
         id: vars
         run: echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
-      - name: Build Docker image
+      - name: Build backend Docker image
         run: |
           docker build \
-            -t ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} \
-            -t ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.IMAGE_NAME }}:latest \
-            .
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.BACKEND_IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.BACKEND_IMAGE_NAME }}:latest \
+            ./backend
 
-      - name: Push Docker image
+      - name: Build frontend Docker image
         run: |
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.IMAGE_NAME }}:latest
+          docker build \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.FRONTEND_IMAGE_NAME }}:latest \
+            ./frontend
+
+      - name: Push backend Docker image
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.BACKEND_IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.BACKEND_IMAGE_NAME }}:latest
+
+      - name: Push frontend Docker image
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
