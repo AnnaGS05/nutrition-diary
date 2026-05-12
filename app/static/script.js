@@ -20,16 +20,36 @@ async function isAuthenticated() {
         credentials: "include"
     });
 
-    if (!response.ok) return false;
+    if (!response.ok) {
+        return false;
+    }
 
     const data = await response.json();
     return Boolean(data.authenticated);
+}
+
+function getSelectedDate() {
+    const input = document.getElementById("entryDate");
+
+    if (!input) {
+        return new Date().toISOString().slice(0, 10);
+    }
+
+    if (!input.value) {
+        input.value = new Date().toISOString().slice(0, 10);
+    }
+
+    return input.value;
 }
 
 window.loginUser = async function () {
     const usernameInput = document.getElementById("loginUsername");
     const passwordInput = document.getElementById("loginPassword");
     const message = document.getElementById("authMessage");
+
+    if (!usernameInput || !passwordInput) {
+        return;
+    }
 
     const body = new URLSearchParams();
     body.append("username", usernameInput.value);
@@ -44,13 +64,17 @@ window.loginUser = async function () {
     const data = await response.json();
 
     if (response.ok && data.message) {
-        if (message) message.textContent = "Вход выполнен";
+        if (message) {
+            message.textContent = "Вход выполнен";
+        }
 
         setTimeout(() => {
             window.location.href = "/";
         }, 500);
     } else {
-        if (message) message.textContent = data.error || "Ошибка входа";
+        if (message) {
+            message.textContent = data.error || "Ошибка входа";
+        }
     }
 };
 
@@ -58,6 +82,10 @@ window.registerUser = async function () {
     const usernameInput = document.getElementById("registerUsername");
     const passwordInput = document.getElementById("registerPassword");
     const message = document.getElementById("authMessage");
+
+    if (!usernameInput || !passwordInput) {
+        return;
+    }
 
     const body = new URLSearchParams();
     body.append("username", usernameInput.value);
@@ -72,7 +100,8 @@ window.registerUser = async function () {
     const data = await response.json();
 
     if (message) {
-        message.textContent = data.message || data.error || "Регистрация выполнена";
+        message.textContent =
+            data.message || data.error || "Регистрация выполнена";
     }
 
     if (response.ok && data.message) {
@@ -88,7 +117,8 @@ window.addEntry = async function () {
 
     if (!authenticated) {
         if (entryMessage) {
-            entryMessage.textContent = "Для добавления записи необходимо войти";
+            entryMessage.textContent =
+                "Для добавления записи необходимо войти";
         }
 
         setTimeout(() => {
@@ -103,7 +133,8 @@ window.addEntry = async function () {
         proteins: Number(document.getElementById("entryProteins").value || 0),
         fats: Number(document.getElementById("entryFats").value || 0),
         carbs: Number(document.getElementById("entryCarbs").value || 0),
-        calories: Number(document.getElementById("entryCalories").value || 0)
+        calories: Number(document.getElementById("entryCalories").value || 0),
+        entry_date: getSelectedDate()
     };
 
     await request("/api/entries/", {
@@ -126,21 +157,27 @@ window.addEntry = async function () {
 };
 
 async function loadEntries() {
-    const response = await fetch("/api/entries/", {
+    const entryDate = getSelectedDate();
+
+    const response = await fetch(`/api/entries/?entry_date=${entryDate}`, {
         credentials: "include"
     });
 
-    if (!response.ok) return;
+    if (!response.ok) {
+        return;
+    }
 
     const entries = await response.json();
     const list = document.getElementById("entriesList");
 
-    if (!list) return;
+    if (!list) {
+        return;
+    }
 
     list.innerHTML = "";
 
     if (entries.length === 0) {
-        list.innerHTML = "<p>Записей пока нет</p>";
+        list.innerHTML = "<p>Записей за выбранную дату пока нет</p>";
         return;
     }
 
@@ -151,13 +188,15 @@ async function loadEntries() {
         item.innerHTML = `
             <div>
                 <div class="entry-title">${entry.name}</div>
-                <small>${entry.created_at}</small>
+                <small>${entry.entry_date}</small>
             </div>
             <div>Б: ${entry.proteins}</div>
             <div>Ж: ${entry.fats}</div>
             <div>У: ${entry.carbs}</div>
             <div>${entry.calories} ккал</div>
-            <button class="danger" onclick="deleteEntry(${entry.id})">Удалить</button>
+            <button class="danger" onclick="deleteEntry(${entry.id})">
+                Удалить
+            </button>
         `;
 
         list.appendChild(item);
@@ -174,7 +213,9 @@ window.deleteEntry = async function (id) {
 };
 
 async function loadStats() {
-    const response = await fetch("/api/stats", {
+    const entryDate = getSelectedDate();
+
+    const response = await fetch(`/api/stats?entry_date=${entryDate}`, {
         credentials: "include"
     });
 
@@ -185,27 +226,53 @@ async function loadStats() {
 
     const stats = await response.json();
 
-    const totalProteins = document.getElementById("totalProteins");
-    const totalFats = document.getElementById("totalFats");
-    const totalCarbs = document.getElementById("totalCarbs");
-    const totalCalories = document.getElementById("totalCalories");
+    setStat(
+        "totalProteins",
+        stats.proteins,
+        stats.proteins_norm,
+        stats.proteins_percent
+    );
 
-    if (totalProteins) totalProteins.textContent = stats.proteins || 0;
-    if (totalFats) totalFats.textContent = stats.fats || 0;
-    if (totalCarbs) totalCarbs.textContent = stats.carbs || 0;
-    if (totalCalories) totalCalories.textContent = stats.calories || 0;
+    setStat(
+        "totalFats",
+        stats.fats,
+        stats.fats_norm,
+        stats.fats_percent
+    );
+
+    setStat(
+        "totalCarbs",
+        stats.carbs,
+        stats.carbs_norm,
+        stats.carbs_percent
+    );
+
+    setStat(
+        "totalCalories",
+        stats.calories,
+        stats.calories_norm,
+        stats.calories_percent
+    );
+}
+
+function setStat(elementId, value, norm, percent) {
+    const element = document.getElementById(elementId);
+
+    if (!element) {
+        return;
+    }
+
+    element.innerHTML = `
+        ${value} / ${norm}
+        <small>${percent}% нормы</small>
+    `;
 }
 
 function setStatsToZero() {
-    const totalProteins = document.getElementById("totalProteins");
-    const totalFats = document.getElementById("totalFats");
-    const totalCarbs = document.getElementById("totalCarbs");
-    const totalCalories = document.getElementById("totalCalories");
-
-    if (totalProteins) totalProteins.textContent = 0;
-    if (totalFats) totalFats.textContent = 0;
-    if (totalCarbs) totalCarbs.textContent = 0;
-    if (totalCalories) totalCalories.textContent = 0;
+    setStat("totalProteins", 0, 0, 0);
+    setStat("totalFats", 0, 0, 0);
+    setStat("totalCarbs", 0, 0, 0);
+    setStat("totalCalories", 0, 0, 0);
 }
 
 async function logoutUser() {
@@ -226,21 +293,38 @@ async function checkAuth() {
     const entriesList = document.getElementById("entriesList");
 
     if (authenticated) {
-        if (authToggleBtn) authToggleBtn.classList.add("hidden");
-        if (logoutBtn) logoutBtn.classList.remove("hidden");
-        if (profileBtn) profileBtn.classList.remove("hidden");
+        if (authToggleBtn) {
+            authToggleBtn.classList.add("hidden");
+        }
+
+        if (logoutBtn) {
+            logoutBtn.classList.remove("hidden");
+        }
+
+        if (profileBtn) {
+            profileBtn.classList.remove("hidden");
+        }
 
         await loadEntries();
         await loadStats();
     } else {
-        if (authToggleBtn) authToggleBtn.classList.remove("hidden");
-        if (logoutBtn) logoutBtn.classList.add("hidden");
-        if (profileBtn) profileBtn.classList.add("hidden");
+        if (authToggleBtn) {
+            authToggleBtn.classList.remove("hidden");
+        }
+
+        if (logoutBtn) {
+            logoutBtn.classList.add("hidden");
+        }
+
+        if (profileBtn) {
+            profileBtn.classList.add("hidden");
+        }
 
         setStatsToZero();
 
         if (entriesList) {
-            entriesList.innerHTML = "<p>Для просмотра записей необходимо войти в систему</p>";
+            entriesList.innerHTML =
+                "<p>Для просмотра записей необходимо войти в систему</p>";
         }
     }
 }
@@ -275,26 +359,39 @@ window.saveProfile = async function () {
     document.getElementById("profileMessage").textContent =
         "Профиль сохранён";
 
-    document.getElementById("normProteins").textContent = data.proteins_norm;
-    document.getElementById("normFats").textContent = data.fats_norm;
-    document.getElementById("normCarbs").textContent = data.carbs_norm;
-    document.getElementById("normCalories").textContent = data.calories_norm;
+    document.getElementById("normProteins").textContent =
+        data.proteins_norm;
+
+    document.getElementById("normFats").textContent =
+        data.fats_norm;
+
+    document.getElementById("normCarbs").textContent =
+        data.carbs_norm;
+
+    document.getElementById("normCalories").textContent =
+        data.calories_norm;
 };
 
 async function loadProfile() {
     const profileAge = document.getElementById("profileAge");
 
-    if (!profileAge) return;
+    if (!profileAge) {
+        return;
+    }
 
     const response = await fetch("/api/profile/", {
         credentials: "include"
     });
 
-    if (!response.ok) return;
+    if (!response.ok) {
+        return;
+    }
 
     const data = await response.json();
 
-    if (!data.exists) return;
+    if (!data.exists) {
+        return;
+    }
 
     document.getElementById("profileAge").value = data.age;
     document.getElementById("profileHeight").value = data.height;
@@ -303,16 +400,34 @@ async function loadProfile() {
     document.getElementById("profileActivity").value = data.activity;
     document.getElementById("profileGoal").value = data.goal;
 
-    document.getElementById("normProteins").textContent = data.proteins_norm;
-    document.getElementById("normFats").textContent = data.fats_norm;
-    document.getElementById("normCarbs").textContent = data.carbs_norm;
-    document.getElementById("normCalories").textContent = data.calories_norm;
+    document.getElementById("normProteins").textContent =
+        data.proteins_norm;
+
+    document.getElementById("normFats").textContent =
+        data.fats_norm;
+
+    document.getElementById("normCarbs").textContent =
+        data.carbs_norm;
+
+    document.getElementById("normCalories").textContent =
+        data.calories_norm;
 }
 
 const logoutButton = document.getElementById("logoutBtn");
 
 if (logoutButton) {
     logoutButton.addEventListener("click", logoutUser);
+}
+
+const dateInput = document.getElementById("entryDate");
+
+if (dateInput) {
+    dateInput.value = new Date().toISOString().slice(0, 10);
+
+    dateInput.addEventListener("change", async () => {
+        await loadEntries();
+        await loadStats();
+    });
 }
 
 checkAuth();

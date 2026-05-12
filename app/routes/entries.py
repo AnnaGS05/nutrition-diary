@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 
@@ -13,14 +15,17 @@ router = APIRouter(prefix="/api", tags=["Entries"])
 
 
 @router.get("/entries/")
-def entries(request: Request):
+def entries(request: Request, entry_date: str | None = None):
     user_id = get_current_user_id(request)
 
     if not user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
+    if not entry_date:
+        entry_date = str(date.today())
+
     return JSONResponse(
-        content=get_entries(user_id),
+        content=get_entries(user_id, entry_date),
         media_type="application/json; charset=utf-8"
     )
 
@@ -31,6 +36,9 @@ def create_entry(entry: dict, request: Request):
 
     if not user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
+
+    if not entry.get("entry_date"):
+        entry["entry_date"] = str(date.today())
 
     return JSONResponse(
         content=add_entry(user_id, entry),
@@ -50,20 +58,20 @@ def remove_entry(entry_id: int, request: Request):
     if not deleted:
         raise HTTPException(status_code=404, detail="Entry not found")
 
-    return JSONResponse(
-        content={"message": "Entry deleted"},
-        media_type="application/json; charset=utf-8"
-    )
+    return {"message": "Entry deleted"}
 
 
 @router.get("/stats")
-def stats(request: Request):
+def stats(request: Request, entry_date: str | None = None):
     user_id = get_current_user_id(request)
 
     if not user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
+    if not entry_date:
+        entry_date = str(date.today())
+
     return JSONResponse(
-        content=get_stats(user_id),
+        content=get_stats(user_id, entry_date),
         media_type="application/json; charset=utf-8"
     )

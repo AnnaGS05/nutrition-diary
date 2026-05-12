@@ -298,3 +298,23 @@ button.danger {
     gap: 12px;
 }
 }
+
+.date-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    color: var(--muted);
+}
+
+.date-row input {
+    max-width: 220px;
+}
+
+.stat-card strong small {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+}
