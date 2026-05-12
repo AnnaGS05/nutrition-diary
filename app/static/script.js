@@ -20,20 +20,44 @@ async function isAuthenticated() {
         credentials: "include"
     });
 
-    if (!response.ok) {
-        return false;
-    }
+    if (!response.ok) return false;
 
     const data = await response.json();
     return Boolean(data.authenticated);
 }
 
-async function registerUser() {
+window.loginUser = async function () {
+    const usernameInput = document.getElementById("loginUsername");
+    const passwordInput = document.getElementById("loginPassword");
+    const message = document.getElementById("authMessage");
+
+    const body = new URLSearchParams();
+    body.append("username", usernameInput.value);
+    body.append("password", passwordInput.value);
+
+    const response = await fetch("/auth/login", {
+        method: "POST",
+        body,
+        credentials: "include"
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.message) {
+        if (message) message.textContent = "Вход выполнен";
+
+        setTimeout(() => {
+            window.location.href = "/";
+        }, 500);
+    } else {
+        if (message) message.textContent = data.error || "Ошибка входа";
+    }
+};
+
+window.registerUser = async function () {
     const usernameInput = document.getElementById("registerUsername");
     const passwordInput = document.getElementById("registerPassword");
     const message = document.getElementById("authMessage");
-
-    if (!usernameInput || !passwordInput) return;
 
     const body = new URLSearchParams();
     body.append("username", usernameInput.value);
@@ -56,84 +80,9 @@ async function registerUser() {
             window.location.href = "/login";
         }, 700);
     }
-}
+};
 
-async function loginUser() {
-    const usernameInput = document.getElementById("loginUsername");
-    const passwordInput = document.getElementById("loginPassword");
-    const message = document.getElementById("authMessage");
-
-    if (!usernameInput || !passwordInput) return;
-
-    const body = new URLSearchParams();
-    body.append("username", usernameInput.value);
-    body.append("password", passwordInput.value);
-
-    const response = await fetch("/auth/login", {
-        method: "POST",
-        body,
-        credentials: "include"
-    });
-
-    const data = await response.json();
-
-    if (response.ok && data.message) {
-        if (message) {
-            message.textContent = "Вход выполнен";
-        }
-
-        setTimeout(() => {
-            window.location.href = "/";
-        }, 500);
-    } else {
-        if (message) {
-            message.textContent = data.error || "Ошибка входа";
-        }
-    }
-}
-
-async function logoutUser() {
-    await fetch("/auth/logout", {
-        method: "POST",
-        credentials: "include"
-    });
-
-    setStatsToZero();
-
-    const entriesList = document.getElementById("entriesList");
-    if (entriesList) {
-        entriesList.innerHTML = "<p>Для просмотра записей необходимо войти в систему</p>";
-    }
-
-    await checkAuth();
-}
-
-async function checkAuth() {
-    const authenticated = await isAuthenticated();
-
-    const authToggleBtn = document.getElementById("authToggleBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const entriesList = document.getElementById("entriesList");
-
-    if (authenticated) {
-        if (authToggleBtn) authToggleBtn.classList.add("hidden");
-        if (logoutBtn) logoutBtn.classList.remove("hidden");
-
-        await loadEntries();
-        await loadStats();
-    } else {
-        if (authToggleBtn) authToggleBtn.classList.remove("hidden");
-        if (logoutBtn) logoutBtn.classList.add("hidden");
-
-        setStatsToZero();
-
-        if (entriesList) {
-            entriesList.innerHTML = "<p>Для просмотра записей необходимо войти в систему</p>";
-        }
-    }
-}
-
-async function addEntry() {
+window.addEntry = async function () {
     const authenticated = await isAuthenticated();
     const entryMessage = document.getElementById("entryMessage");
 
@@ -149,18 +98,12 @@ async function addEntry() {
         return;
     }
 
-    const nameInput = document.getElementById("entryName");
-    const proteinsInput = document.getElementById("entryProteins");
-    const fatsInput = document.getElementById("entryFats");
-    const carbsInput = document.getElementById("entryCarbs");
-    const caloriesInput = document.getElementById("entryCalories");
-
     const entry = {
-        name: nameInput.value,
-        proteins: Number(proteinsInput.value || 0),
-        fats: Number(fatsInput.value || 0),
-        carbs: Number(carbsInput.value || 0),
-        calories: Number(caloriesInput.value || 0)
+        name: document.getElementById("entryName").value,
+        proteins: Number(document.getElementById("entryProteins").value || 0),
+        fats: Number(document.getElementById("entryFats").value || 0),
+        carbs: Number(document.getElementById("entryCarbs").value || 0),
+        calories: Number(document.getElementById("entryCalories").value || 0)
     };
 
     await request("/api/entries/", {
@@ -172,24 +115,22 @@ async function addEntry() {
         entryMessage.textContent = "Запись добавлена";
     }
 
-    nameInput.value = "";
-    proteinsInput.value = "";
-    fatsInput.value = "";
-    carbsInput.value = "";
-    caloriesInput.value = "";
+    document.getElementById("entryName").value = "";
+    document.getElementById("entryProteins").value = "";
+    document.getElementById("entryFats").value = "";
+    document.getElementById("entryCarbs").value = "";
+    document.getElementById("entryCalories").value = "";
 
     await loadEntries();
     await loadStats();
-}
+};
 
 async function loadEntries() {
     const response = await fetch("/api/entries/", {
         credentials: "include"
     });
 
-    if (!response.ok) {
-        return;
-    }
+    if (!response.ok) return;
 
     const entries = await response.json();
     const list = document.getElementById("entriesList");
@@ -223,21 +164,14 @@ async function loadEntries() {
     });
 }
 
-async function deleteEntry(id) {
-    const authenticated = await isAuthenticated();
-
-    if (!authenticated) {
-        window.location.href = "/login";
-        return;
-    }
-
+window.deleteEntry = async function (id) {
     await request(`/api/entries/${id}`, {
         method: "DELETE"
     });
 
     await loadEntries();
     await loadStats();
-}
+};
 
 async function loadStats() {
     const response = await fetch("/api/stats", {
@@ -274,6 +208,107 @@ function setStatsToZero() {
     if (totalCalories) totalCalories.textContent = 0;
 }
 
+async function logoutUser() {
+    await fetch("/auth/logout", {
+        method: "POST",
+        credentials: "include"
+    });
+
+    window.location.href = "/";
+}
+
+async function checkAuth() {
+    const authenticated = await isAuthenticated();
+
+    const authToggleBtn = document.getElementById("authToggleBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const profileBtn = document.getElementById("profileBtn");
+    const entriesList = document.getElementById("entriesList");
+
+    if (authenticated) {
+        if (authToggleBtn) authToggleBtn.classList.add("hidden");
+        if (logoutBtn) logoutBtn.classList.remove("hidden");
+        if (profileBtn) profileBtn.classList.remove("hidden");
+
+        await loadEntries();
+        await loadStats();
+    } else {
+        if (authToggleBtn) authToggleBtn.classList.remove("hidden");
+        if (logoutBtn) logoutBtn.classList.add("hidden");
+        if (profileBtn) profileBtn.classList.add("hidden");
+
+        setStatsToZero();
+
+        if (entriesList) {
+            entriesList.innerHTML = "<p>Для просмотра записей необходимо войти в систему</p>";
+        }
+    }
+}
+
+window.saveProfile = async function () {
+    const profile = {
+        age: document.getElementById("profileAge").value,
+        height: document.getElementById("profileHeight").value,
+        weight: document.getElementById("profileWeight").value,
+        gender: document.getElementById("profileGender").value,
+        activity: document.getElementById("profileActivity").value,
+        goal: document.getElementById("profileGoal").value
+    };
+
+    const response = await fetch("/api/profile/", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(profile)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        document.getElementById("profileMessage").textContent =
+            "Необходимо войти в систему";
+        return;
+    }
+
+    document.getElementById("profileMessage").textContent =
+        "Профиль сохранён";
+
+    document.getElementById("normProteins").textContent = data.proteins_norm;
+    document.getElementById("normFats").textContent = data.fats_norm;
+    document.getElementById("normCarbs").textContent = data.carbs_norm;
+    document.getElementById("normCalories").textContent = data.calories_norm;
+};
+
+async function loadProfile() {
+    const profileAge = document.getElementById("profileAge");
+
+    if (!profileAge) return;
+
+    const response = await fetch("/api/profile/", {
+        credentials: "include"
+    });
+
+    if (!response.ok) return;
+
+    const data = await response.json();
+
+    if (!data.exists) return;
+
+    document.getElementById("profileAge").value = data.age;
+    document.getElementById("profileHeight").value = data.height;
+    document.getElementById("profileWeight").value = data.weight;
+    document.getElementById("profileGender").value = data.gender;
+    document.getElementById("profileActivity").value = data.activity;
+    document.getElementById("profileGoal").value = data.goal;
+
+    document.getElementById("normProteins").textContent = data.proteins_norm;
+    document.getElementById("normFats").textContent = data.fats_norm;
+    document.getElementById("normCarbs").textContent = data.carbs_norm;
+    document.getElementById("normCalories").textContent = data.calories_norm;
+}
+
 const logoutButton = document.getElementById("logoutBtn");
 
 if (logoutButton) {
@@ -281,3 +316,4 @@ if (logoutButton) {
 }
 
 checkAuth();
+loadProfile();

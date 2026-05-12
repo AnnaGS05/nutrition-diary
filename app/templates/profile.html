@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Профиль — NutriLog</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page">
+
+    <section class="card auth-page">
+
+        <h2>Профиль пользователя</h2>
+
+        <input id="profileAge" type="number" placeholder="Возраст">
+        <input id="profileHeight" type="number" placeholder="Рост, см">
+        <input id="profileWeight" type="number" placeholder="Вес, кг">
+
+        <select id="profileGender">
+            <option value="female">Женский</option>
+            <option value="male">Мужской</option>
+        </select>
+
+        <select id="profileActivity">
+            <option value="1.2">Минимальная активность</option>
+            <option value="1.375">Лёгкая активность</option>
+            <option value="1.55">Средняя активность</option>
+            <option value="1.725">Высокая активность</option>
+        </select>
+
+        <select id="profileGoal">
+            <option value="loss">Похудение</option>
+            <option value="maintain">Поддержание веса</option>
+            <option value="gain">Набор массы</option>
+        </select>
+
+        <button onclick="saveProfile()">Сохранить профиль</button>
+
+        <p id="profileMessage" class="message"></p>
+
+        <div class="stats profile-stats">
+            <div class="stat-card">
+                <span>Норма белков</span>
+                <strong id="normProteins">0</strong>
+            </div>
+            <div class="stat-card">
+                <span>Норма жиров</span>
+                <strong id="normFats">0</strong>
+            </div>
+            <div class="stat-card">
+                <span>Норма углеводов</span>
+                <strong id="normCarbs">0</strong>
+            </div>
+            <div class="stat-card">
+                <span>Норма калорий</span>
+                <strong id="normCalories">0</strong>
+            </div>
+        </div>
+
+        <p>
+            <a href="/">Перейти к дневнику</a>
+        </p>
+
+    </section>
+
+</div>
+
+<script src="/static/script.js"></script>
+
+</body>
+</html>

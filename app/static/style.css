@@ -292,4 +292,9 @@ button.danger {
     .hero-auth-btn {
         min-width: 120px;
     }
+    .hero-topbar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
 }
