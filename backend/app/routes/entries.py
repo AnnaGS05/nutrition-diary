@@ -3,6 +3,7 @@ from datetime import date
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 
+from app.schemas.entry import EntryCreate
 from app.services.auth_service import get_current_user_id
 from app.services.entry_service import (
     get_entries,
@@ -31,17 +32,21 @@ def entries(request: Request, entry_date: str | None = None):
 
 
 @router.post("/entries/")
-def create_entry(entry: dict, request: Request):
+def create_entry(entry: EntryCreate, request: Request):
     user_id = get_current_user_id(request)
 
     if not user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    if not entry.get("entry_date"):
-        entry["entry_date"] = str(date.today())
+    entry_data = entry.model_dump()
+
+    if not entry_data["entry_date"]:
+        entry_data["entry_date"] = str(date.today())
+    else:
+        entry_data["entry_date"] = str(entry_data["entry_date"])
 
     return JSONResponse(
-        content=add_entry(user_id, entry),
+        content=add_entry(user_id, entry_data),
         media_type="application/json; charset=utf-8"
     )
 

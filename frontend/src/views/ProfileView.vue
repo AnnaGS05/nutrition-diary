@@ -131,7 +131,35 @@ export default {
             };
         },
         async saveProfile() {
+<<<<<<< HEAD
             const response = await api.post("/api/profile/", this.profile);
+=======
+            const age = Number(this.profile.age);
+            const height = Number(this.profile.height);
+            const weight = Number(this.profile.weight);
+
+            if (!age || age < 10 || age > 120) {
+                this.message = "Возраст должен быть от 10 до 120 лет";
+                return;
+            }
+
+            if (!height || height < 100 || height > 250) {
+                this.message = "Рост должен быть от 100 до 250 см";
+                return;
+            }
+
+            if (!weight || weight < 30 || weight > 300) {
+                this.message = "Вес должен быть от 30 до 300 кг";
+                return;
+            }
+
+            const response = await api.post("/api/profile/", {
+                ...this.profile,
+                age,
+                height,
+                weight
+            });
+>>>>>>> 3ddcdb1
 
             this.message = "Профиль сохранён ✓";
 

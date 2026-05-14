@@ -153,8 +153,43 @@ export default {
                 return;
             }
 
+<<<<<<< HEAD
             await api.post("/api/entries/", {
                 ...this.entry,
+=======
+            const name = this.entry.name.trim();
+            const proteins = Number(this.entry.proteins || 0);
+            const fats = Number(this.entry.fats || 0);
+            const carbs = Number(this.entry.carbs || 0);
+            const calories = Number(this.entry.calories || 0);
+
+            if (!name) {
+                this.message = "Введите название блюда";
+                return;
+            }
+
+            if (name.length > 100) {
+                this.message = "Название блюда не должно превышать 100 символов";
+                return;
+            }
+
+            if ([proteins, fats, carbs, calories].some(value => value < 0)) {
+                this.message = "Значения КБЖУ не могут быть отрицательными";
+                return;
+            }
+
+            if (calories > 10000) {
+                this.message = "Калорийность одной записи не должна превышать 10000";
+                return;
+            }
+
+            await api.post("/api/entries/", {
+                name,
+                proteins,
+                fats,
+                carbs,
+                calories,
+>>>>>>> 3ddcdb1
                 entry_date: this.entryDate
             });
 

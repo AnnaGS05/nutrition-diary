@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 
+from app.schemas.profile import ProfileCreate
 from app.services.auth_service import get_current_user_id
 from app.services.profile_service import save_profile, get_profile
 
@@ -31,13 +32,13 @@ def profile(request: Request):
 
 
 @router.post("/")
-def create_or_update_profile(profile_data: dict, request: Request):
+def create_or_update_profile(profile_data: ProfileCreate, request: Request):
     user_id = get_current_user_id(request)
 
     if not user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    norms = save_profile(user_id, profile_data)
+    norms = save_profile(user_id, profile_data.model_dump())
 
     return JSONResponse(
         content={

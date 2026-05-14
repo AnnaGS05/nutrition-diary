@@ -32,9 +32,33 @@ export default {
     },
     methods: {
         async register() {
+<<<<<<< HEAD
             const body = new URLSearchParams();
             body.append("username", this.username);
             body.append("password", this.password);
+=======
+            const username = this.username.trim();
+            const password = this.password.trim();
+
+            if (!username || !password) {
+                this.message = "Введите логин и пароль";
+                return;
+            }
+
+            if (username.length < 3 || username.length > 30) {
+                this.message = "Логин должен содержать от 3 до 30 символов";
+                return;
+            }
+
+            if (password.length < 6 || password.length > 50) {
+                this.message = "Пароль должен содержать от 6 до 50 символов";
+                return;
+            }
+
+            const body = new URLSearchParams();
+            body.append("username", username);
+            body.append("password", password);
+>>>>>>> 3ddcdb1
 
             const response = await api.post("/auth/register", body, {
                 headers: {

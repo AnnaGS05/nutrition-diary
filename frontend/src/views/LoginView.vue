@@ -32,9 +32,28 @@ export default {
     },
     methods: {
         async login() {
+<<<<<<< HEAD
             const body = new URLSearchParams();
             body.append("username", this.username);
             body.append("password", this.password);
+=======
+            const username = this.username.trim();
+            const password = this.password.trim();
+
+            if (!username || !password) {
+                this.message = "Введите логин и пароль";
+                return;
+            }
+
+            if (username.length < 3 || username.length > 30) {
+                this.message = "Логин должен содержать от 3 до 30 символов";
+                return;
+            }
+
+            const body = new URLSearchParams();
+            body.append("username", username);
+            body.append("password", password);
+>>>>>>> 3ddcdb1
 
             const response = await api.post("/auth/login", body, {
                 headers: {
