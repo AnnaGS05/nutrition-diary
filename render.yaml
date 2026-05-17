@@ -1,0 +1,71 @@
+services:
+  - type: web
+    name: nutrilog-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_NAME
+        value: NutriLog
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DB_HOST
+        fromDatabase:
+          name: nutrilog-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: nutrilog-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: nutrilog-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: nutrilog-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: nutrilog-db
+          property: password
+      - key: REDIS_HOST
+        fromService:
+          name: nutrilog-redis
+          type: redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          name: nutrilog-redis
+          type: redis
+          property: port
+      - key: CORS_ORIGINS
+        value: https://nutrilog-frontend-1heu.onrender.com
+
+  - type: web
+    name: nutrilog-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        value: https://nutrilog-backend-1heu.onrender.com
+
+  - type: redis
+    name: nutrilog-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+    ipAllowList: []
+
+databases:
+  - name: nutrilog-db
+    plan: free
+    databaseName: nutrition
+    user: nutriloguser
