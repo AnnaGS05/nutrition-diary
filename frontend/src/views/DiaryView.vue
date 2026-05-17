@@ -50,7 +50,9 @@
                     <input v-model.number="entry.calories" type="number" placeholder="Калории">
                 </div>
 
-                <button @click="addEntry">Добавить запись</button>
+                <button @click="addEntry" :disabled="loading">
+                    {{ loading ? "Добавление..." : "Добавить запись" }}
+                </button>
                 <p class="message">{{ message }}</p>
             </section>
 
@@ -125,7 +127,8 @@ export default {
                 carbs: 0,
                 calories: 0
             },
-            message: ""
+            message: "",
+            loading: false
         };
     },
     async mounted() {
@@ -134,17 +137,24 @@ export default {
     },
     methods: {
         async checkAuth() {
-            const response = await api.get("/auth/me");
-            this.authenticated = Boolean(response.data.authenticated);
+            try {
+                const response = await api.get("/auth/me");
+                this.authenticated = Boolean(response.data.authenticated);
+            } catch {
+                this.authenticated = false;
+            }
         },
         async loadData() {
             if (!this.authenticated) return;
+            try {
+                const entriesResponse = await api.get(`/api/entries/?entry_date=${this.entryDate}`);
+                this.entries = entriesResponse.data;
 
-            const entriesResponse = await api.get(`/api/entries/?entry_date=${this.entryDate}`);
-            this.entries = entriesResponse.data;
-
-            const statsResponse = await api.get(`/api/stats?entry_date=${this.entryDate}`);
-            this.stats = statsResponse.data;
+                const statsResponse = await api.get(`/api/stats?entry_date=${this.entryDate}`);
+                this.stats = statsResponse.data;
+            } catch {
+                this.message = "Не удалось загрузить данные";
+            }
         },
         async addEntry() {
             if (!this.authenticated) {
@@ -153,10 +163,6 @@ export default {
                 return;
             }
 
-<<<<<<< HEAD
-            await api.post("/api/entries/", {
-                ...this.entry,
-=======
             const name = this.entry.name.trim();
             const proteins = Number(this.entry.proteins || 0);
             const fats = Number(this.entry.fats || 0);
@@ -167,51 +173,48 @@ export default {
                 this.message = "Введите название блюда";
                 return;
             }
-
             if (name.length > 100) {
                 this.message = "Название блюда не должно превышать 100 символов";
                 return;
             }
-
-            if ([proteins, fats, carbs, calories].some(value => value < 0)) {
+            if ([proteins, fats, carbs, calories].some(v => v < 0)) {
                 this.message = "Значения КБЖУ не могут быть отрицательными";
                 return;
             }
-
             if (calories > 10000) {
                 this.message = "Калорийность одной записи не должна превышать 10000";
                 return;
             }
 
-            await api.post("/api/entries/", {
-                name,
-                proteins,
-                fats,
-                carbs,
-                calories,
->>>>>>> 3ddcdb1
-                entry_date: this.entryDate
-            });
-
-            this.message = "Запись добавлена ✓";
-
-            this.entry = {
-                name: "",
-                proteins: 0,
-                fats: 0,
-                carbs: 0,
-                calories: 0
-            };
-
-            await this.loadData();
+            this.loading = true;
+            try {
+                await api.post("/api/entries/", {
+                    name, proteins, fats, carbs, calories,
+                    entry_date: this.entryDate
+                });
+                this.message = "Запись добавлена ✓";
+                this.entry = { name: "", proteins: 0, fats: 0, carbs: 0, calories: 0 };
+                await this.loadData();
+            } catch {
+                this.message = "Не удалось добавить запись";
+            } finally {
+                this.loading = false;
+            }
         },
         async deleteEntry(id) {
-            await api.delete(`/api/entries/${id}`);
-            await this.loadData();
+            try {
+                await api.delete(`/api/entries/${id}`);
+                await this.loadData();
+            } catch {
+                this.message = "Не удалось удалить запись";
+            }
         },
         async logout() {
-            await api.post("/auth/logout");
-            this.$router.push("/login");
+            try {
+                await api.post("/auth/logout");
+            } finally {
+                this.$router.push("/login");
+            }
         }
     }
 };

@@ -7,7 +7,9 @@
             <input v-model="username" type="text" placeholder="Логин">
             <input v-model="password" type="password" placeholder="Пароль">
 
-            <button @click="login">Войти</button>
+            <button @click="login" :disabled="loading">
+                {{ loading ? "Вход..." : "Войти" }}
+            </button>
 
             <p class="message">{{ message }}</p>
 
@@ -27,16 +29,12 @@ export default {
         return {
             username: "",
             password: "",
-            message: ""
+            message: "",
+            loading: false
         };
     },
     methods: {
         async login() {
-<<<<<<< HEAD
-            const body = new URLSearchParams();
-            body.append("username", this.username);
-            body.append("password", this.password);
-=======
             const username = this.username.trim();
             const password = this.password.trim();
 
@@ -44,29 +42,30 @@ export default {
                 this.message = "Введите логин и пароль";
                 return;
             }
-
             if (username.length < 3 || username.length > 30) {
                 this.message = "Логин должен содержать от 3 до 30 символов";
                 return;
             }
 
-            const body = new URLSearchParams();
-            body.append("username", username);
-            body.append("password", password);
->>>>>>> 3ddcdb1
+            this.loading = true;
+            try {
+                const body = new URLSearchParams();
+                body.append("username", username);
+                body.append("password", password);
 
-            const response = await api.post("/auth/login", body, {
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
+                const response = await api.post("/auth/login", body, {
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" }
+                });
+
+                this.message = response.data.message || response.data.error || "Ошибка входа";
+
+                if (response.data.message) {
+                    setTimeout(() => this.$router.push("/"), 500);
                 }
-            });
-
-            this.message = response.data.message || response.data.error || "Ошибка входа";
-
-            if (response.data.message) {
-                setTimeout(() => {
-                    this.$router.push("/");
-                }, 500);
+            } catch {
+                this.message = "Ошибка соединения с сервером";
+            } finally {
+                this.loading = false;
             }
         }
     }

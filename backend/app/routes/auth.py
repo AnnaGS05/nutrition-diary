@@ -1,12 +1,23 @@
 import uuid
 
 from fastapi import APIRouter, Form, Request, Response
+from passlib.context import CryptContext
 
 from app.database import get_connection
 from app.logger import logger
 from app.redis_client import redis_client
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return pwd_context.verify(plain, hashed)
 
 
 @router.post("/register")
@@ -15,33 +26,20 @@ def register(username: str = Form(...), password: str = Form(...)):
     cursor = conn.cursor()
 
     try:
+        hashed = hash_password(password)
+
         cursor.execute(
             "INSERT INTO users (username, password) VALUES (%s, %s)",
-            (username, password)
+            (username, hashed)
         )
         conn.commit()
 
-        logger.info(
-            "user_registered",
-            extra={
-                "path": "/auth/register",
-                "status_code": 201
-            }
-        )
-
+        logger.info("user_registered", extra={"path": "/auth/register", "status_code": 201})
         return {"message": "User registered"}
 
     except Exception:
         conn.rollback()
-
-        logger.error(
-            "user_registration_failed",
-            extra={
-                "path": "/auth/register",
-                "status_code": 400
-            }
-        )
-
+        logger.error("user_registration_failed", extra={"path": "/auth/register", "status_code": 400})
         return {"error": "User already exists"}
 
     finally:
@@ -55,24 +53,16 @@ def login(response: Response, username: str = Form(...), password: str = Form(..
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT id FROM users WHERE username = %s AND password = %s",
-        (username, password)
+        "SELECT id, password FROM users WHERE username = %s",
+        (username,)
     )
-
     user = cursor.fetchone()
 
     cursor.close()
     conn.close()
 
-    if not user:
-        logger.error(
-            "login_failed",
-            extra={
-                "path": "/auth/login",
-                "status_code": 401
-            }
-        )
-
+    if not user or not verify_password(password, user[1]):
+        logger.error("login_failed", extra={"path": "/auth/login", "status_code": 401})
         return {"error": "Invalid username or password"}
 
     session_id = str(uuid.uuid4())
@@ -87,14 +77,7 @@ def login(response: Response, username: str = Form(...), password: str = Form(..
         max_age=3600
     )
 
-    logger.info(
-        "login_success",
-        extra={
-            "path": "/auth/login",
-            "status_code": 200
-        }
-    )
-
+    logger.info("login_success", extra={"path": "/auth/login", "status_code": 200})
     return {"message": "Logged in"}
 
 
@@ -106,15 +89,7 @@ def logout(request: Request, response: Response):
         redis_client.delete(session_id)
 
     response.delete_cookie("session_id")
-
-    logger.info(
-        "logout",
-        extra={
-            "path": "/auth/logout",
-            "status_code": 200
-        }
-    )
-
+    logger.info("logout", extra={"path": "/auth/logout", "status_code": 200})
     return {"message": "Logged out"}
 
 
@@ -123,38 +98,14 @@ def me(request: Request):
     session_id = request.cookies.get("session_id")
 
     if not session_id:
-        logger.info(
-            "auth_check_failed",
-            extra={
-                "path": "/auth/me",
-                "status_code": 401
-            }
-        )
-
+        logger.info("auth_check_failed", extra={"path": "/auth/me", "status_code": 401})
         return {"authenticated": False}
 
     user_id = redis_client.get(session_id)
 
     if not user_id:
-        logger.info(
-            "auth_check_failed",
-            extra={
-                "path": "/auth/me",
-                "status_code": 401
-            }
-        )
-
+        logger.info("auth_check_failed", extra={"path": "/auth/me", "status_code": 401})
         return {"authenticated": False}
 
-    logger.info(
-        "auth_check_success",
-        extra={
-            "path": "/auth/me",
-            "status_code": 200
-        }
-    )
-
-    return {
-        "authenticated": True,
-        "user_id": user_id
-    }
+    logger.info("auth_check_success", extra={"path": "/auth/me", "status_code": 200})
+    return {"authenticated": True, "user_id": user_id}

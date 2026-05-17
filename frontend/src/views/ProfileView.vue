@@ -2,7 +2,6 @@
     <div class="page">
         <nav class="navbar">
             <router-link to="/" class="logo-text">NutriLog</router-link>
-
             <div class="nav-actions">
                 <router-link to="/">Дневник</router-link>
                 <router-link to="/stats">Статистика</router-link>
@@ -18,17 +17,14 @@
                     <label>Возраст</label>
                     <input v-model.number="profile.age" type="number" placeholder="Возраст">
                 </div>
-
                 <div>
                     <label>Рост, см</label>
                     <input v-model.number="profile.height" type="number" placeholder="Рост">
                 </div>
-
                 <div>
                     <label>Вес, кг</label>
                     <input v-model.number="profile.weight" type="number" placeholder="Вес">
                 </div>
-
                 <div>
                     <label>Пол</label>
                     <select v-model="profile.gender">
@@ -36,7 +32,6 @@
                         <option value="female">Женский</option>
                     </select>
                 </div>
-
                 <div>
                     <label>Активность</label>
                     <select v-model.number="profile.activity">
@@ -46,7 +41,6 @@
                         <option :value="1.725">Высокая</option>
                     </select>
                 </div>
-
                 <div>
                     <label>Цель</label>
                     <select v-model="profile.goal">
@@ -57,7 +51,9 @@
                 </div>
             </div>
 
-            <button @click="saveProfile">Сохранить профиль</button>
+            <button @click="saveProfile" :disabled="loading">
+                {{ loading ? "Сохранение..." : "Сохранить профиль" }}
+            </button>
             <p class="message">{{ message }}</p>
         </section>
 
@@ -102,7 +98,8 @@ export default {
                 carbs_norm: 0,
                 calories_norm: 0
             },
-            message: ""
+            message: "",
+            loading: false
         };
     },
     async mounted() {
@@ -110,30 +107,28 @@ export default {
     },
     methods: {
         async loadProfile() {
-            const response = await api.get("/api/profile/");
-
-            if (!response.data.exists) return;
-
-            this.profile = {
-                age: response.data.age,
-                height: response.data.height,
-                weight: response.data.weight,
-                gender: response.data.gender,
-                activity: response.data.activity,
-                goal: response.data.goal
-            };
-
-            this.norms = {
-                proteins_norm: response.data.proteins_norm,
-                fats_norm: response.data.fats_norm,
-                carbs_norm: response.data.carbs_norm,
-                calories_norm: response.data.calories_norm
-            };
+            try {
+                const response = await api.get("/api/profile/");
+                if (!response.data.exists) return;
+                this.profile = {
+                    age: response.data.age,
+                    height: response.data.height,
+                    weight: response.data.weight,
+                    gender: response.data.gender,
+                    activity: response.data.activity,
+                    goal: response.data.goal
+                };
+                this.norms = {
+                    proteins_norm: response.data.proteins_norm,
+                    fats_norm: response.data.fats_norm,
+                    carbs_norm: response.data.carbs_norm,
+                    calories_norm: response.data.calories_norm
+                };
+            } catch {
+                this.message = "Не удалось загрузить профиль";
+            }
         },
         async saveProfile() {
-<<<<<<< HEAD
-            const response = await api.post("/api/profile/", this.profile);
-=======
             const age = Number(this.profile.age);
             const height = Number(this.profile.height);
             const weight = Number(this.profile.weight);
@@ -142,39 +137,41 @@ export default {
                 this.message = "Возраст должен быть от 10 до 120 лет";
                 return;
             }
-
             if (!height || height < 100 || height > 250) {
                 this.message = "Рост должен быть от 100 до 250 см";
                 return;
             }
-
             if (!weight || weight < 30 || weight > 300) {
                 this.message = "Вес должен быть от 30 до 300 кг";
                 return;
             }
 
-            const response = await api.post("/api/profile/", {
-                ...this.profile,
-                age,
-                height,
-                weight
-            });
->>>>>>> 3ddcdb1
-
-            this.message = "Профиль сохранён ✓";
-
-            this.norms = {
-                proteins_norm: response.data.proteins_norm,
-                fats_norm: response.data.fats_norm,
-                carbs_norm: response.data.carbs_norm,
-                calories_norm: response.data.calories_norm
-            };
-
-            await this.loadProfile();
+            this.loading = true;
+            try {
+                const response = await api.post("/api/profile/", {
+                    ...this.profile,
+                    age, height, weight
+                });
+                this.message = "Профиль сохранён ✓";
+                this.norms = {
+                    proteins_norm: response.data.proteins_norm,
+                    fats_norm: response.data.fats_norm,
+                    carbs_norm: response.data.carbs_norm,
+                    calories_norm: response.data.calories_norm
+                };
+                await this.loadProfile();
+            } catch {
+                this.message = "Не удалось сохранить профиль";
+            } finally {
+                this.loading = false;
+            }
         },
         async logout() {
-            await api.post("/auth/logout");
-            this.$router.push("/login");
+            try {
+                await api.post("/auth/logout");
+            } finally {
+                this.$router.push("/login");
+            }
         }
     }
 };
