@@ -11,6 +11,8 @@ from app.routes.entries import router as entries_router
 from app.routes.profile import router as profile_router
 from app.routes.stats import router as stats_router
 
+from app.database_init import init_db
+
 app = FastAPI(
     title=settings.APP_NAME,
     default_response_class=JSONResponse
@@ -30,6 +32,12 @@ app.include_router(auth_router)
 app.include_router(entries_router)
 app.include_router(profile_router)
 app.include_router(stats_router)
+
+
+@app.on_event("startup")
+def startup():
+    init_db()
+    logger.info("app_started")
 
 
 @app.get("/")

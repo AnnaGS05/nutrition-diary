@@ -1,0 +1,53 @@
+from app.database import get_connection
+from app.logger import logger
+
+
+def init_db():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_profiles (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+            age INTEGER NOT NULL,
+            height DOUBLE PRECISION NOT NULL,
+            weight DOUBLE PRECISION NOT NULL,
+            gender TEXT NOT NULL,
+            activity DOUBLE PRECISION NOT NULL,
+            goal TEXT NOT NULL,
+            calories_norm DOUBLE PRECISION NOT NULL,
+            proteins_norm DOUBLE PRECISION NOT NULL,
+            fats_norm DOUBLE PRECISION NOT NULL,
+            carbs_norm DOUBLE PRECISION NOT NULL
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS entries (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            name TEXT NOT NULL,
+            proteins DOUBLE PRECISION NOT NULL DEFAULT 0,
+            fats DOUBLE PRECISION NOT NULL DEFAULT 0,
+            carbs DOUBLE PRECISION NOT NULL DEFAULT 0,
+            calories DOUBLE PRECISION NOT NULL DEFAULT 0,
+            entry_date DATE NOT NULL DEFAULT CURRENT_DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    logger.info("db_initialized")
