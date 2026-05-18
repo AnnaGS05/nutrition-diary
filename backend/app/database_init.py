@@ -3,7 +3,6 @@ from app.logger import logger
 
 
 def init_db():
-
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -50,4 +49,4 @@ def init_db():
     cursor.close()
     conn.close()
 
-    logger.info("db_initialized")
+    logger.info("db_initialized", extra={"path": "/", "status_code": 200})
