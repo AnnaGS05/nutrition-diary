@@ -74,7 +74,9 @@ def login(response: Response, username: str = Form(...), password: str = Form(..
         key="session_id",
         value=session_id,
         httponly=True,
-        max_age=3600
+        max_age=3600,
+        samesite="none",
+        secure=True
     )
 
     logger.info("login_success", extra={"path": "/auth/login", "status_code": 200})
@@ -88,7 +90,11 @@ def logout(request: Request, response: Response):
     if session_id:
         redis_client.delete(session_id)
 
-    response.delete_cookie("session_id")
+    response.delete_cookie(
+        key="session_id",
+        samesite="none",
+        secure=True
+    )
     logger.info("logout", extra={"path": "/auth/logout", "status_code": 200})
     return {"message": "Logged out"}
 
