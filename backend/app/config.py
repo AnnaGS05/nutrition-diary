@@ -20,14 +20,12 @@ class Settings:
     RELEASE_VERSION = os.getenv("RELEASE_VERSION", "local")
     ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")
 
+    IS_PRODUCTION = os.getenv("ENVIRONMENT", "dev") == "production"
+
     CORS_ORIGINS = os.getenv(
         "CORS_ORIGINS",
         "http://localhost:5173,http://localhost:3000"
     ).split(",")
-
-    @property
-    def IS_PRODUCTION(self) -> bool:
-        return self.ENVIRONMENT == "production"
 
 
 settings = Settings()
