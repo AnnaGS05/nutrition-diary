@@ -10,7 +10,7 @@ from app.database_init import init_db
 from app.logger import logger
 
 from app.middleware import RequestLoggingMiddleware
-from app.middleware.csrf_middleware import CSRFMiddleware
+from app.csrf_middleware import CSRFMiddleware
 
 from app.routes.auth import router as auth_router
 from app.routes.entries import router as entries_router
