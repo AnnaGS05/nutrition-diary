@@ -69,3 +69,10 @@ def instance():
     return JSONResponse(
         content={"container": socket.gethostname()}
     )
+
+@app.get("/debug")
+def debug():
+    return {
+        "environment": settings.ENVIRONMENT,
+        "is_production": settings.IS_PRODUCTION
+    }
