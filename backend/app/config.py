@@ -25,5 +25,9 @@ class Settings:
         "http://localhost:5173,http://localhost:3000"
     ).split(",")
 
+    @property
+    def IS_PRODUCTION(self) -> bool:
+        return self.ENVIRONMENT == "production"
+
 
 settings = Settings()

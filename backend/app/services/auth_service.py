@@ -1,13 +1,8 @@
-from fastapi import HTTPException, Request
-
-from app.csrf import verify_csrf
+from fastapi import Request, HTTPException
 from app.redis_client import redis_client
 
 
 def get_current_user_id(request: Request):
-    if request.method in ("POST", "PUT", "PATCH", "DELETE"):
-        verify_csrf(request)
-
     session_id = request.cookies.get("session_id")
 
     if not session_id:

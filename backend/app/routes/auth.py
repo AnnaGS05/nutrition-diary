@@ -30,10 +30,12 @@ def register(username: str = Form(...), password: str = Form(...)):
         hashed = hash_password(password)
         cursor.execute(
             "INSERT INTO users (username, password) VALUES (%s, %s)",
-            (username, hashed)
+            (username, hashed),
         )
         conn.commit()
+
         logger.info("user_registered", extra={"path": "/auth/register", "status_code": 201})
+
         return {"message": "User registered"}
 
     except Exception:
@@ -53,7 +55,7 @@ def login(response: Response, username: str = Form(...), password: str = Form(..
 
     cursor.execute(
         "SELECT id, password FROM users WHERE username = %s",
-        (username,)
+        (username,),
     )
     user = cursor.fetchone()
 
@@ -74,8 +76,8 @@ def login(response: Response, username: str = Form(...), password: str = Form(..
         value=session_id,
         httponly=True,
         max_age=3600,
-        samesite="none",
-        secure=True
+        samesite="none" if settings.IS_PRODUCTION else "lax",,
+        secure=False,
     )
 
     csrf_token = generate_csrf_token()
@@ -85,7 +87,7 @@ def login(response: Response, username: str = Form(...), password: str = Form(..
 
     return {
         "message": "Logged in",
-        "csrf_token": csrf_token
+        "csrf_token": csrf_token,
     }
 
 
@@ -98,14 +100,14 @@ def logout(request: Request, response: Response):
 
     response.delete_cookie(
         key="session_id",
-        samesite="none",
-        secure=True
+        samesite="none" if settings.IS_PRODUCTION else "lax",
+        secure=settings.IS_PRODUCTION,
     )
 
     response.delete_cookie(
         key=CSRF_COOKIE_NAME,
-        samesite="none",
-        secure=True
+        samesite="none" if settings.IS_PRODUCTION else "lax",
+        secure=settings.IS_PRODUCTION,
     )
 
     logger.info("logout", extra={"path": "/auth/logout", "status_code": 200})
@@ -118,18 +120,14 @@ def me(request: Request):
     session_id = request.cookies.get("session_id")
 
     if not session_id:
-        logger.info("auth_check_failed", extra={"path": "/auth/me", "status_code": 401})
         return {"authenticated": False}
 
     user_id = redis_client.get(session_id)
 
     if not user_id:
-        logger.info("auth_check_failed", extra={"path": "/auth/me", "status_code": 401})
         return {"authenticated": False}
-
-    logger.info("auth_check_success", extra={"path": "/auth/me", "status_code": 200})
 
     return {
         "authenticated": True,
-        "user_id": int(user_id)
+        "user_id": int(user_id),
     }
