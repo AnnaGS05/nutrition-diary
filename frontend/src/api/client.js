@@ -5,4 +5,22 @@ const api = axios.create({
     withCredentials: true
 });
 
+function getCookie(name) {
+    const match = document.cookie.match(
+        new RegExp("(^| )" + name + "=([^;]+)")
+    );
+
+    return match ? decodeURIComponent(match[2]) : null;
+}
+
+api.interceptors.request.use(config => {
+    const csrf = getCookie("csrf_token");
+
+    if (csrf) {
+        config.headers["X-CSRF-Token"] = csrf;
+    }
+
+    return config;
+});
+
 export default api;

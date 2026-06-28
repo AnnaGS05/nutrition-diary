@@ -3,6 +3,7 @@ import uuid
 from fastapi import APIRouter, Form, HTTPException, Request, Response
 from passlib.context import CryptContext
 
+from app.csrf import generate_csrf_token, set_csrf_cookie, CSRF_COOKIE_NAME
 from app.database import get_connection
 from app.logger import logger
 from app.redis_client import redis_client
@@ -77,8 +78,15 @@ def login(response: Response, username: str = Form(...), password: str = Form(..
         secure=True
     )
 
+    csrf_token = generate_csrf_token()
+    set_csrf_cookie(response, csrf_token)
+
     logger.info("login_success", extra={"path": "/auth/login", "status_code": 200})
-    return {"message": "Logged in"}
+
+    return {
+        "message": "Logged in",
+        "csrf_token": csrf_token
+    }
 
 
 @router.post("/logout")
@@ -93,7 +101,15 @@ def logout(request: Request, response: Response):
         samesite="none",
         secure=True
     )
+
+    response.delete_cookie(
+        key=CSRF_COOKIE_NAME,
+        samesite="none",
+        secure=True
+    )
+
     logger.info("logout", extra={"path": "/auth/logout", "status_code": 200})
+
     return {"message": "Logged out"}
 
 
@@ -112,4 +128,8 @@ def me(request: Request):
         return {"authenticated": False}
 
     logger.info("auth_check_success", extra={"path": "/auth/me", "status_code": 200})
-    return {"authenticated": True, "user_id": user_id}
+
+    return {
+        "authenticated": True,
+        "user_id": int(user_id)
+    }
