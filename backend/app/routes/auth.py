@@ -7,6 +7,7 @@ from app.csrf import generate_csrf_token, set_csrf_cookie, CSRF_COOKIE_NAME
 from app.database import get_connection
 from app.logger import logger
 from app.redis_client import redis_client
+from app.config import settings
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -76,8 +77,8 @@ def login(response: Response, username: str = Form(...), password: str = Form(..
         value=session_id,
         httponly=True,
         max_age=3600,
-        samesite="none" if settings.IS_PRODUCTION else "lax",,
-        secure=False,
+        samesite="none" if settings.IS_PRODUCTION else "lax",
+        secure=settings.IS_PRODUCTION,
     )
 
     csrf_token = generate_csrf_token()
