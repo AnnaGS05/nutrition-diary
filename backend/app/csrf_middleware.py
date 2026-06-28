@@ -1,5 +1,7 @@
-from fastapi import Request, HTTPException
+from fastapi import Request
 from app.csrf import verify_csrf
+
+CSRF_EXEMPT_PATHS = ["/auth/login", "/auth/register"]
 
 
 class CSRFMiddleware:
@@ -13,6 +15,7 @@ class CSRFMiddleware:
         request = Request(scope, receive=receive)
 
         if request.method in ("POST", "PUT", "PATCH", "DELETE"):
-            verify_csrf(request)
+            if request.url.path not in CSRF_EXEMPT_PATHS:
+                verify_csrf(request)
 
         return await self.app(scope, receive, send)
