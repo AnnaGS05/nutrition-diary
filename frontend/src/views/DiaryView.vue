@@ -274,6 +274,7 @@ export default {
             try {
                 await api.post("/auth/logout");
             } finally {
+                localStorage.removeItem("csrf_token");
                 this.$router.push("/login");
             }
         }

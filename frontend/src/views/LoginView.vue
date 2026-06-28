@@ -57,6 +57,10 @@ export default {
                     headers: { "Content-Type": "application/x-www-form-urlencoded" }
                 });
 
+                if (response.data.csrf_token) {
+                    localStorage.setItem("csrf_token", response.data.csrf_token);
+                }
+
                 this.message = response.data.message || "Вход выполнен ✓";
                 setTimeout(() => this.$router.push("/"), 500);
             } catch (error) {
