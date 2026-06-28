@@ -42,6 +42,7 @@ docker-compose up --build
 
 ## REST API
 
+```bash
 POST   /auth/register   Регистрация пользователя
 POST   /auth/login   Вход в систему
 POST   /auth/logout   Выход из системы
@@ -60,6 +61,7 @@ GET   /api/stats/weekly   Статистика КБЖУ за неделю
 
 GET   /health   Проверка работоспособности сервера
 GET   /instance   Идентификатор текущего контейнера
+```
 
 ## Тестирование
 
