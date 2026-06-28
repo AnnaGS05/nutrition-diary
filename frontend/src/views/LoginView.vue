@@ -57,13 +57,10 @@ export default {
                     headers: { "Content-Type": "application/x-www-form-urlencoded" }
                 });
 
-                this.message = response.data.message || response.data.error || "Ошибка входа";
-
-                if (response.data.message) {
-                    setTimeout(() => this.$router.push("/"), 500);
-                }
-            } catch {
-                this.message = "Ошибка соединения с сервером";
+                this.message = response.data.message || "Вход выполнен ✓";
+                setTimeout(() => this.$router.push("/"), 500);
+            } catch (error) {
+                this.message = error.response?.data?.detail || "Ошибка соединения с сервером";
             } finally {
                 this.loading = false;
             }

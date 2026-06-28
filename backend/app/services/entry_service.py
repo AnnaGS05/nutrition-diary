@@ -61,10 +61,62 @@ def add_entry(user_id: int, entry):
 
     logger.info(
         "entry_created",
-        extra={
-            "path": "/api/entries",
-            "status_code": 201
-        }
+        extra={"path": "/api/entries", "status_code": 201}
+    )
+
+    return {
+        "id": row[0],
+        "name": row[1],
+        "proteins": row[2],
+        "fats": row[3],
+        "carbs": row[4],
+        "calories": row[5],
+        "entry_date": str(row[6]),
+        "created_at": str(row[7])
+    }
+
+
+def update_entry(user_id: int, entry_id: int, entry: dict):
+    """
+    Обновляет существующую запись питания. Возвращает обновлённую запись
+    либо None если запись не найдена или не принадлежит пользователю.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE entries
+        SET name = %s,
+            proteins = %s,
+            fats = %s,
+            carbs = %s,
+            calories = %s,
+            entry_date = COALESCE(%s, entry_date)
+        WHERE id = %s AND user_id = %s
+        RETURNING id, name, proteins, fats, carbs, calories, entry_date, created_at
+    """, (
+        entry.get("name"),
+        entry.get("proteins", 0),
+        entry.get("fats", 0),
+        entry.get("carbs", 0),
+        entry.get("calories", 0),
+        entry.get("entry_date"),
+        entry_id,
+        user_id
+    ))
+
+    row = cursor.fetchone()
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    if not row:
+        return None
+
+    logger.info(
+        "entry_updated",
+        extra={"path": "/api/entries", "status_code": 200}
     )
 
     return {
@@ -102,7 +154,7 @@ def get_stats(user_id: int, entry_date: str):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT 
+        SELECT
             COALESCE(SUM(proteins), 0),
             COALESCE(SUM(fats), 0),
             COALESCE(SUM(carbs), 0),
@@ -114,7 +166,7 @@ def get_stats(user_id: int, entry_date: str):
     consumed = cursor.fetchone()
 
     cursor.execute("""
-        SELECT 
+        SELECT
             proteins_norm,
             fats_norm,
             carbs_norm,

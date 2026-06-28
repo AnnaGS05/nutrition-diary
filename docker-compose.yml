@@ -8,12 +8,10 @@ services:
       HOST: 0.0.0.0
       PORT: 8000
       DEBUG: "true"
-      SECRET_KEY: docker-secret-key
       DB_HOST: db
       DB_PORT: 5432
       DB_NAME: nutrition
       DB_USER: postgres
-      DB_PASSWORD: postgres
       REDIS_HOST: redis
       REDIS_PORT: 6379
       RELEASE_VERSION: local

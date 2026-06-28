@@ -8,6 +8,7 @@ from app.services.auth_service import get_current_user_id
 from app.services.entry_service import (
     get_entries,
     add_entry,
+    update_entry,
     delete_entry,
     get_stats
 )
@@ -40,13 +41,36 @@ def create_entry(entry: EntryCreate, request: Request):
 
     entry_data = entry.model_dump()
 
-    if not entry_data["entry_date"]:
+    if not entry_data.get("entry_date"):
         entry_data["entry_date"] = str(date.today())
     else:
         entry_data["entry_date"] = str(entry_data["entry_date"])
 
     return JSONResponse(
         content=add_entry(user_id, entry_data),
+        media_type="application/json; charset=utf-8"
+    )
+
+
+@router.put("/entries/{entry_id}")
+def edit_entry(entry_id: int, entry: EntryCreate, request: Request):
+    user_id = get_current_user_id(request)
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    entry_data = entry.model_dump()
+
+    if entry_data.get("entry_date"):
+        entry_data["entry_date"] = str(entry_data["entry_date"])
+
+    updated = update_entry(user_id, entry_id, entry_data)
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="Entry not found")
+
+    return JSONResponse(
+        content=updated,
         media_type="application/json; charset=utf-8"
     )
 

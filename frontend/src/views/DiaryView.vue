@@ -35,7 +35,7 @@
 
         <main>
             <section class="card">
-                <h2>Добавить запись питания</h2>
+                <h2>{{ editingId ? "Редактировать запись" : "Добавить запись питания" }}</h2>
 
                 <div class="date-row">
                     <label for="entryDate">Дата дневника:</label>
@@ -43,16 +43,36 @@
                 </div>
 
                 <div class="form-grid">
-                    <input v-model="entry.name" placeholder="Название блюда">
-                    <input v-model.number="entry.proteins" type="number" placeholder="Белки">
-                    <input v-model.number="entry.fats" type="number" placeholder="Жиры">
-                    <input v-model.number="entry.carbs" type="number" placeholder="Углеводы">
-                    <input v-model.number="entry.calories" type="number" placeholder="Калории">
+                    <div class="form-field">
+                        <label>Название блюда</label>
+                        <input v-model="entry.name" placeholder="Например: Гречка с курицей">
+                    </div>
+                    <div class="form-field">
+                        <label>Белки, г</label>
+                        <input v-model.number="entry.proteins" type="number" placeholder="0">
+                    </div>
+                    <div class="form-field">
+                        <label>Жиры, г</label>
+                        <input v-model.number="entry.fats" type="number" placeholder="0">
+                    </div>
+                    <div class="form-field">
+                        <label>Углеводы, г</label>
+                        <input v-model.number="entry.carbs" type="number" placeholder="0">
+                    </div>
+                    <div class="form-field">
+                        <label>Калории, ккал</label>
+                        <input v-model.number="entry.calories" type="number" placeholder="0">
+                    </div>
                 </div>
 
-                <button @click="addEntry" :disabled="loading">
-                    {{ loading ? "Добавление..." : "Добавить запись" }}
-                </button>
+                <div class="form-actions">
+                    <button @click="saveEntry" :disabled="loading">
+                        {{ loading ? "Сохранение..." : (editingId ? "Сохранить изменения" : "Добавить запись") }}
+                    </button>
+                    <button v-if="editingId" class="secondary" type="button" @click="cancelEdit">
+                        Отмена
+                    </button>
+                </div>
                 <p class="message">{{ message }}</p>
             </section>
 
@@ -87,13 +107,21 @@
                 </div>
 
                 <div v-else class="entries">
-                    <div v-for="item in entries" :key="item.id" class="entry">
+                    <div
+                        v-for="item in entries"
+                        :key="item.id"
+                        class="entry"
+                        :class="{ 'entry-editing': editingId === item.id }"
+                    >
                         <div><strong class="entry-title">{{ item.name }}</strong></div>
-                        <div>Б: {{ item.proteins }}</div>
-                        <div>Ж: {{ item.fats }}</div>
-                        <div>У: {{ item.carbs }}</div>
+                        <div>Б: {{ item.proteins }} г</div>
+                        <div>Ж: {{ item.fats }} г</div>
+                        <div>У: {{ item.carbs }} г</div>
                         <div>{{ item.calories }} ккал</div>
-                        <button class="danger" @click="deleteEntry(item.id)">Удалить</button>
+                        <div class="entry-actions">
+                            <button class="edit" @click="startEdit(item)">Изменить</button>
+                            <button class="danger" @click="deleteEntry(item.id)">Удалить</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -127,6 +155,7 @@ export default {
                 carbs: 0,
                 calories: 0
             },
+            editingId: null,
             message: "",
             loading: false
         };
@@ -156,7 +185,42 @@ export default {
                 this.message = "Не удалось загрузить данные";
             }
         },
-        async addEntry() {
+        startEdit(item) {
+            this.editingId = item.id;
+            this.entry = {
+                name: item.name,
+                proteins: item.proteins,
+                fats: item.fats,
+                carbs: item.carbs,
+                calories: item.calories
+            };
+            this.message = "";
+        },
+        cancelEdit() {
+            this.editingId = null;
+            this.entry = { name: "", proteins: 0, fats: 0, carbs: 0, calories: 0 };
+            this.message = "";
+        },
+        validateEntry(name, proteins, fats, carbs, calories) {
+            if (!name) {
+                this.message = "Введите название блюда";
+                return false;
+            }
+            if (name.length > 100) {
+                this.message = "Название блюда не должно превышать 100 символов";
+                return false;
+            }
+            if ([proteins, fats, carbs, calories].some(v => v < 0)) {
+                this.message = "Значения КБЖУ не могут быть отрицательными";
+                return false;
+            }
+            if (calories > 10000) {
+                this.message = "Калорийность одной записи не должна превышать 10000";
+                return false;
+            }
+            return true;
+        },
+        async saveEntry() {
             if (!this.authenticated) {
                 this.message = "Для добавления записи необходимо войти";
                 setTimeout(() => this.$router.push("/login"), 700);
@@ -169,34 +233,30 @@ export default {
             const carbs = Number(this.entry.carbs || 0);
             const calories = Number(this.entry.calories || 0);
 
-            if (!name) {
-                this.message = "Введите название блюда";
-                return;
-            }
-            if (name.length > 100) {
-                this.message = "Название блюда не должно превышать 100 символов";
-                return;
-            }
-            if ([proteins, fats, carbs, calories].some(v => v < 0)) {
-                this.message = "Значения КБЖУ не могут быть отрицательными";
-                return;
-            }
-            if (calories > 10000) {
-                this.message = "Калорийность одной записи не должна превышать 10000";
-                return;
-            }
+            if (!this.validateEntry(name, proteins, fats, carbs, calories)) return;
 
             this.loading = true;
             try {
-                await api.post("/api/entries/", {
-                    name, proteins, fats, carbs, calories,
-                    entry_date: this.entryDate
-                });
-                this.message = "Запись добавлена ✓";
-                this.entry = { name: "", proteins: 0, fats: 0, carbs: 0, calories: 0 };
+                if (this.editingId) {
+                    await api.put(`/api/entries/${this.editingId}`, {
+                        name, proteins, fats, carbs, calories,
+                        entry_date: this.entryDate
+                    });
+                    this.message = "Запись обновлена ✓";
+                } else {
+                    await api.post("/api/entries/", {
+                        name, proteins, fats, carbs, calories,
+                        entry_date: this.entryDate
+                    });
+                    this.message = "Запись добавлена ✓";
+                }
+
+                this.cancelEdit();
                 await this.loadData();
             } catch {
-                this.message = "Не удалось добавить запись";
+                this.message = this.editingId
+                    ? "Не удалось обновить запись"
+                    : "Не удалось добавить запись";
             } finally {
                 this.loading = false;
             }
@@ -204,6 +264,7 @@ export default {
         async deleteEntry(id) {
             try {
                 await api.delete(`/api/entries/${id}`);
+                if (this.editingId === id) this.cancelEdit();
                 await this.loadData();
             } catch {
                 this.message = "Не удалось удалить запись";
@@ -219,3 +280,62 @@ export default {
     }
 };
 </script>
+
+<style scoped>
+.form-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-field label {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+}
+
+.form-field input {
+    width: 100%;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.form-actions button.secondary {
+    background: transparent;
+    border: 1px solid #ccc;
+    color: #555;
+}
+
+.entry-editing {
+    outline: 2px solid #4a9c5e;
+    background: rgba(74, 156, 94, 0.06);
+}
+
+.entry-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.entry-actions button.edit {
+    background: #f0f4f1;
+    color: #2f6e44;
+    border: 1px solid #c9ddcd;
+}
+
+@media (max-width: 700px) {
+    .form-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+</style>

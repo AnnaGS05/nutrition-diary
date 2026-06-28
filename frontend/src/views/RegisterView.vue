@@ -1,3 +1,4 @@
+```vue
 <template>
     <div class="page">
         <section class="card auth-page">
@@ -61,13 +62,10 @@ export default {
                     headers: { "Content-Type": "application/x-www-form-urlencoded" }
                 });
 
-                this.message = response.data.message || response.data.error || "Ошибка регистрации";
-
-                if (response.data.message) {
-                    setTimeout(() => this.$router.push("/login"), 600);
-                }
-            } catch {
-                this.message = "Ошибка соединения с сервером";
+                this.message = response.data.message || "Аккаунт создан ✓";
+                setTimeout(() => this.$router.push("/login"), 600);
+            } catch (error) {
+                this.message = error.response?.data?.detail || "Ошибка соединения с сервером";
             } finally {
                 this.loading = false;
             }

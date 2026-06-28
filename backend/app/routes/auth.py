@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Form, Request, Response
+from fastapi import APIRouter, Form, HTTPException, Request, Response
 from passlib.context import CryptContext
 
 from app.database import get_connection
@@ -27,20 +27,18 @@ def register(username: str = Form(...), password: str = Form(...)):
 
     try:
         hashed = hash_password(password)
-
         cursor.execute(
             "INSERT INTO users (username, password) VALUES (%s, %s)",
             (username, hashed)
         )
         conn.commit()
-
         logger.info("user_registered", extra={"path": "/auth/register", "status_code": 201})
         return {"message": "User registered"}
 
     except Exception:
         conn.rollback()
         logger.error("user_registration_failed", extra={"path": "/auth/register", "status_code": 400})
-        return {"error": "User already exists"}
+        raise HTTPException(status_code=400, detail="User already exists")
 
     finally:
         cursor.close()
@@ -63,7 +61,7 @@ def login(response: Response, username: str = Form(...), password: str = Form(..
 
     if not user or not verify_password(password, user[1]):
         logger.error("login_failed", extra={"path": "/auth/login", "status_code": 401})
-        return {"error": "Invalid username or password"}
+        raise HTTPException(status_code=401, detail="Invalid username or password")
 
     session_id = str(uuid.uuid4())
     user_id = user[0]
